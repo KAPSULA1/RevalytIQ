@@ -1,33 +1,76 @@
-import axios from "axios";
+import { api } from "./api";
 
-// axios instance
-export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000",
-  headers: { "Content-Type": "application/json" },
-});
-
-// 🔑 Login (JWT Token)
-export async function login(username: string, password: string) {
-  const { data } = await api.post("/api/auth/token/", { username, password });
-  return data as { access: string; refresh: string };
+export interface AuthTokens {
+  access: string;
+  refresh: string;
 }
 
-// 🧾 Register (optional, for signup)
-export async function register(username: string, email: string, password: string) {
-  const { data } = await api.post("/api/auth/register/", {
+export async function login(username: string, password: string) {
+  const { data } = await api.post<AuthTokens>("/api/auth/token/", { username, password });
+  return data;
+}
+
+export interface RegisterResponse {
+  id: number;
+  username: string;
+  email: string;
+}
+
+export async function register(
+  username: string,
+  email: string,
+  password: string,
+  password2: string,
+) {
+  const { data } = await api.post<RegisterResponse>("/api/auth/register/", {
     username,
     email,
     password,
+    password2,
   });
   return data;
 }
 
-// 📊 KPI & Orders Fetching for Dashboard
-export async function fetchKPIs() {
-  const token = localStorage.getItem("access");
-  const { data } = await api.get("/api/analytics/kpis/", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export interface ForgotPasswordResponse {
+  detail: string;
+  token?: string;
+}
+
+export async function forgotPassword(email: string) {
+  const { data } = await api.post<ForgotPasswordResponse>("/api/auth/password/forgot/", { email });
+  return data;
+}
+
+export interface ResetPasswordPayload {
+  email: string;
+  token: string;
+  new_password: string;
+  new_password2: string;
+}
+
+export async function resetPassword(payload: ResetPasswordPayload) {
+  const { data } = await api.post<{ detail: string }>("/api/auth/password/reset/", payload);
+  return data;
+}
+
+export interface CurrentUser {
+  id: number;
+  username: string;
+  email: string;
+}
+
+export async function me() {
+  const { data } = await api.get<CurrentUser>("/api/auth/me/");
+  return data;
+}
+
+export interface ProfileUpdatePayload {
+  username?: string;
+  email?: string;
+}
+
+export async function updateProfile(payload: ProfileUpdatePayload) {
+  const { data } = await api.patch<CurrentUser>("/api/auth/profile/", payload);
   return data;
 }
 
@@ -40,9 +83,17 @@ export interface Order {
 }
 
 export async function fetchOrders() {
-  const token = localStorage.getItem("access");
-  const { data } = await api.get("/api/analytics/orders/", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const { data } = await api.get<Order[] | { results: Order[] }>("/api/analytics/orders/");
+  return data;
+}
+
+export interface KPIResponse {
+  revenue: number;
+  orders: number;
+  aov: number;
+}
+
+export async function fetchKPIs() {
+  const { data } = await api.get<KPIResponse>("/api/analytics/kpis/");
   return data;
 }

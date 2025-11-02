@@ -49,6 +49,7 @@ flowchart LR
 ## Features
 
 - Secure JWT authentication (SimpleJWT) with refresh tokens.
+- End-to-end auth flows: signup with confirmation, login redirects, protected dashboard, password reset, and profile management.
 - Real-time analytics dashboard with KPI and orders visualisations.
 - Polished signup and login flows with REST back-end integration.
 - Configurable CORS/CSRF for Next.js + Django pairing.
@@ -109,7 +110,8 @@ make up   # optional docker-compose
 
 | Variable | Description | Example |
 | --- | --- | --- |
-| `DJANGO_SETTINGS_MODULE` | Django settings module | `revalyt.settings.base` |
+| `ENVIRONMENT` | `local` or `production` | `local` |
+| `DEBUG` | Toggle Django debug mode | `True` |
 | `SECRET_KEY` | Django secret key | `django-insecure-...` |
 | `DATABASE_URL` | PostgreSQL connection URL | `postgres://user:pass@localhost:5432/revalyt` |
 | `REDIS_URL` | Redis cache URL | `redis://localhost:6379/0` |
@@ -189,4 +191,3 @@ Released under the MIT License. For questions or partnership inquiries, reach ou
 - **CI validation:** Push to GitHub; both backend and frontend workflows execute automatically.
 - **Render deploy:** Apply `render.yaml`, supply environment variables, run migrations (`python manage.py migrate`).
 - **Vercel deploy:** Import repo in Vercel, set env, trigger build.
-
