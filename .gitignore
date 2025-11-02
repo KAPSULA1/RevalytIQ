@@ -109,3 +109,11 @@ jest_cache/
 *.sock
 *.tar
 node_modules/
+
+# Environment
+.env
+frontend/.env.local
+backend/.env
+
+# Virtualenv
+backend/.venv/
