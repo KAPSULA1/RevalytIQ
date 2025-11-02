@@ -1,0 +1,29 @@
+import axios from "axios";
+
+export const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000",
+  headers: { "Content-Type": "application/json" },
+});
+
+export async function fetchKPIs() {
+  const token = localStorage.getItem("access");
+  const { data } = await api.get("/api/analytics/kpis/", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return data;
+}
+
+export interface Order {
+  id: number;
+  customer: string;
+  amount: number;
+  created_at: string;
+}
+
+export async function fetchOrders() {
+  const token = localStorage.getItem("access");
+  const { data } = await api.get("/api/analytics/orders/", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return data;
+}

@@ -1,0 +1,120 @@
+"use client";
+
+import { useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import Navbar from "../../components/Navbar";
+import Sidebar from "../../components/Sidebar";
+import KPIStat from "./components/KPIStat";
+import RevenueChart from "./components/RevenueChart";
+import OrdersTable from "./components/OrdersTable";
+import { fetchKPIs, fetchOrders, Order } from "../../lib/auth";
+import { hydrateAuthFromStorage, useAuth } from "../../lib/store";
+
+export default function Dashboard() {
+  const router = useRouter();
+  const access = useAuth((s) => s.access);
+
+  // 🔐 Authentication check
+  useEffect(() => {
+    hydrateAuthFromStorage();
+    const token = useAuth.getState().access;
+    if (!token) router.replace("/");
+  }, [router]);
+
+  // 📊 Fetch KPIs and Orders
+  const kpiQ = useQuery({
+    queryKey: ["kpis"],
+    queryFn: fetchKPIs,
+    enabled: !!access,
+  });
+
+  const ordersQ = useQuery({
+    queryKey: ["orders"],
+    queryFn: fetchOrders,
+    enabled: !!access,
+  });
+
+  // 💰 Aggregate revenue over time
+  const revenueSeries = useMemo(() => {
+    const items = (Array.isArray(ordersQ.data)
+      ? ordersQ.data
+      : ordersQ.data?.results) as Order[] | undefined;
+
+    const buckets = new Map<string, number>();
+
+    (items ?? []).forEach((o) => {
+      const d = new Date(o.created_at);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+        2,
+        "0"
+      )}-${String(d.getDate()).padStart(2, "0")}`;
+      buckets.set(key, (buckets.get(key) ?? 0) + o.amount);
+    });
+
+    return Array.from(buckets.entries()).map(([x, y]) => ({
+      x,
+      y: Number(y.toFixed(2)),
+    }));
+  }, [ordersQ.data]);
+
+  // 🌀 Loading / Error states
+  if (kpiQ.isLoading || ordersQ.isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-gray-500">
+        Loading analytics data...
+      </div>
+    );
+  }
+
+  if (kpiQ.isError || ordersQ.isError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-red-500">
+        Failed to load data. Please refresh.
+      </div>
+    );
+  }
+
+  // ✅ Render dashboard
+  return (
+    <div className="min-h-screen grid grid-rows-[auto_1fr]">
+      <Navbar />
+      <div className="grid grid-cols-[240px_1fr]">
+        <Sidebar />
+        <main className="p-6 space-y-6 overflow-y-auto">
+          <h1 className="text-xl font-semibold">Analytics Overview</h1>
+
+          <div className="grid md:grid-cols-3 gap-4">
+            <KPIStat
+              label="Revenue"
+              value={
+                kpiQ.data ? `$${kpiQ.data.revenue.toFixed(2)}` : "Loading..."
+              }
+            />
+            <KPIStat
+              label="Orders"
+              value={kpiQ.data?.orders ?? "Loading..."}
+            />
+            <KPIStat
+              label="AOV"
+              value={kpiQ.data ? `$${kpiQ.data.aov}` : "Loading..."}
+            />
+          </div>
+
+          <RevenueChart points={revenueSeries} />
+
+          <div>
+            <h2 className="text-lg font-semibold mb-3">Recent Orders</h2>
+            <OrdersTable
+              orders={
+                (Array.isArray(ordersQ.data)
+                  ? ordersQ.data
+                  : ordersQ.data?.results) ?? []
+              }
+            />
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}

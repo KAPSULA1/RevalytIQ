@@ -1,0 +1,8 @@
+import { render, screen } from "@testing-library/react";
+import KPIStat from "../app/dashboard/components/KPIStat";
+
+test("renders KPI label and value", () => {
+  render(<KPIStat label="Revenue" value="$123.45" />);
+  expect(screen.getByText("Revenue")).toBeInTheDocument();
+  expect(screen.getByText("$123.45")).toBeInTheDocument();
+});

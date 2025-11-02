@@ -1,0 +1,18 @@
+from django.contrib.auth import get_user_model
+from rest_framework import status
+from rest_framework.test import APITestCase
+
+User = get_user_model()
+
+class KPITests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="tester", email="test@example.com", password="pass1234")
+        self.client.force_authenticate(user=self.user)
+
+    def test_kpi_endpoint(self):
+        """✅ KPI should return revenue, orders, and aov"""
+        response = self.client.get("/api/analytics/kpis/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("revenue", response.data)
+        self.assertIn("orders", response.data)
+        self.assertIn("aov", response.data)

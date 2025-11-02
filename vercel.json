@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "framework": "nextjs",
+  "env": {
+    "NEXT_PUBLIC_API_URL": "@render_backend_url",
+    "NEXT_PUBLIC_APP_NAME": "RevalytIQ",
+    "NEXT_PUBLIC_SENTRY_DSN": "@sentry_dsn"
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://revalytiq-backend-preview.onrender.com/api/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "*.vercel.app"
+        }
+      ]
+    }
+  ]
+}

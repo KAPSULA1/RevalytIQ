@@ -1,0 +1,5 @@
+import { api } from "../lib/api";
+
+test("api has baseURL", () => {
+  expect(api.defaults.baseURL).toBeTruthy();
+});

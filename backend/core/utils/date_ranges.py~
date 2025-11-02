@@ -1,0 +1,10 @@
+from __future__ import annotations
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+
+def parse_range(start_iso: str | None, end_iso: str | None) -> tuple[datetime, datetime]:
+    """Parse ISO datetimes (UTC) with fallback to last 30 days."""
+    now = datetime.utcnow()
+    start = datetime.fromisoformat(start_iso) if start_iso else now - relativedelta(days=30)
+    end = datetime.fromisoformat(end_iso) if end_iso else now
+    return start, end

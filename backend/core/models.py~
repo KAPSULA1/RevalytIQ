@@ -1,0 +1,24 @@
+from __future__ import annotations
+from django.db import models
+
+class Customer(models.Model):
+    """Represents a customer entity."""
+    email = models.EmailField(unique=True)
+    name = models.CharField(max_length=120)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return self.email
+
+
+class Order(models.Model):
+    """Represents an order placed by a customer."""
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="orders")
+    amount_cents = models.PositiveIntegerField()
+    status = models.CharField(max_length=20, choices=[("paid", "Paid"), ("refunded", "Refunded")])
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def amount(self) -> float:
+        """Return amount in currency units (e.g., dollars)."""
+        return self.amount_cents / 100.0
