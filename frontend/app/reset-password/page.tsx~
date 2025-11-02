@@ -1,0 +1,134 @@
+"use client";
+
+import { FormEvent, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { isAxiosError } from "axios";
+import { resetPassword } from "@/lib/auth";
+
+export default function ResetPasswordPage() {
+  const search = useSearchParams();
+  const router = useRouter();
+  const initialUid = useMemo(() => search.get("uid") ?? "", [search]);
+  const initialToken = useMemo(() => search.get("token") ?? "", [search]);
+
+  const [uid, setUid] = useState(initialUid);
+  const [token, setToken] = useState(initialToken);
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (!uid.trim() || !token.trim() || !password.trim() || !confirm.trim()) {
+      setError("All fields are required.");
+      return;
+    }
+    if (password.trim() !== confirm.trim()) {
+      setError("Passwords must match.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await resetPassword({
+        uid: uid.trim(),
+        token: token.trim(),
+        new_password: password.trim(),
+        confirm_password: confirm.trim(),
+      });
+      setSuccess(response.detail ?? "Password updated. You can now sign in.");
+      setTimeout(() => router.push("/"), 2000);
+    } catch (err) {
+      if (isAxiosError(err)) {
+        const message =
+          typeof err.response?.data === "string"
+            ? err.response.data
+            : Object.values(err.response?.data ?? {})
+                .flat()
+                .join(" ") || "Unable to reset password.";
+        setError(message);
+      } else {
+        setError("Unexpected error. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white shadow-lg rounded-2xl p-6 w-96 flex flex-col gap-4"
+      >
+        <h2 className="text-2xl font-semibold text-center">Reset Password</h2>
+        <p className="text-sm text-gray-600 text-center">
+          Paste the UID and token generated from the forgot password step, choose a new password,
+          and confirm it.
+        </p>
+
+        <input
+          type="text"
+          placeholder="UID"
+          value={uid}
+          onChange={(event) => setUid(event.target.value)}
+          className="border p-2 rounded-lg focus:ring focus:ring-blue-300"
+        />
+
+        <input
+          type="text"
+          placeholder="Token"
+          value={token}
+          onChange={(event) => setToken(event.target.value)}
+          className="border p-2 rounded-lg focus:ring focus:ring-blue-300"
+        />
+
+        <input
+          type="password"
+          placeholder="New Password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          className="border p-2 rounded-lg focus:ring focus:ring-blue-300"
+        />
+
+        <input
+          type="password"
+          placeholder="Confirm Password"
+          value={confirm}
+          onChange={(event) => setConfirm(event.target.value)}
+          className="border p-2 rounded-lg focus:ring focus:ring-blue-300"
+        />
+
+        {error && <p className="text-red-600 text-sm text-center">{error}</p>}
+        {success && (
+          <p className="text-green-600 text-sm text-center" role="status">
+            {success}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-70"
+        >
+          {loading ? "Resetting..." : "Reset Password"}
+        </button>
+
+        <div className="flex justify-between text-sm">
+          <Link className="text-blue-600 hover:underline" href="/forgot-password">
+            Need a token?
+          </Link>
+          <Link className="text-blue-600 hover:underline" href="/">
+            Back to login
+          </Link>
+        </div>
+      </form>
+    </div>
+  );
+}

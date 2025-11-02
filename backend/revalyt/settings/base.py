@@ -1,22 +1,43 @@
 """
 Base Django settings for RevalytIQ project.
-Includes:
-- PostgreSQL config
-- REST & JWT
-- Celery
-- CORS
-- Admin templates
+
+Covers:
+- PostgreSQL via DATABASE_URL (or discrete vars)
+- JWT + DRF + CORS
+- Celery + Redis
+- Security hardening (auto when production)
 """
+
 from __future__ import annotations
 import os
-from pathlib import Path
 from datetime import timedelta
+from pathlib import Path
+from urllib.parse import urlparse
 
+# --------------------------------------------------------------
+# Core paths and environment flags
+# --------------------------------------------------------------
 BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
-SECRET_KEY: str = os.getenv("DJANGO_SECRET_KEY", "dev-secret")
-DEBUG: bool = os.getenv("DJANGO_DEBUG", "false").lower() == "true"
-ALLOWED_HOSTS: list[str] = os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
+ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+_debug_override = os.getenv("DEBUG")
+DEBUG: bool = (
+    _debug_override.lower() == "true"
+    if isinstance(_debug_override, str)
+    else ENVIRONMENT != "production"
+)
+
+SECRET_KEY: str = os.getenv("SECRET_KEY", "django-insecure-key")
+
+# Production host handling
+ALLOWED_HOSTS: list[str] = os.getenv(
+    "ALLOWED_HOSTS",
+    "localhost,127.0.0.1" if DEBUG else "revalyt.onrender.com",
+).split(",")
+
+# --------------------------------------------------------------
+# Installed apps
+# --------------------------------------------------------------
 INSTALLED_APPS = [
     # Django
     "django.contrib.admin",
@@ -25,15 +46,18 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # 3rd-party
+    # Third-party
     "rest_framework",
     "corsheaders",
-    # Local
+    # Local apps
     "core",
     "analytics",
     "users",
 ]
 
+# --------------------------------------------------------------
+# Middleware
+# --------------------------------------------------------------
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -47,6 +71,9 @@ MIDDLEWARE = [
 ROOT_URLCONF = "revalyt.urls"
 WSGI_APPLICATION = "revalyt.wsgi.application"
 
+# --------------------------------------------------------------
+# Templates
+# --------------------------------------------------------------
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -63,9 +90,22 @@ TEMPLATES = [
     },
 ]
 
-# ---- DB (locally: localhost; Docker: set POSTGRES_HOST=db) ----
-DATABASES = {
-    "default": {
+# --------------------------------------------------------------
+# Database
+# --------------------------------------------------------------
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL:
+    parsed = urlparse(DATABASE_URL)
+    default_db = {
+        "ENGINE": "django.db.backends.postgresql",
+        "HOST": parsed.hostname or "localhost",
+        "PORT": str(parsed.port or "5432"),
+        "NAME": (parsed.path or "/revalytiq").lstrip("/"),
+        "USER": parsed.username or "",
+        "PASSWORD": parsed.password or "",
+    }
+else:
+    default_db = {
         "ENGINE": "django.db.backends.postgresql",
         "HOST": os.getenv("POSTGRES_HOST", "localhost"),
         "PORT": os.getenv("POSTGRES_PORT", "5432"),
@@ -73,8 +113,12 @@ DATABASES = {
         "USER": os.getenv("POSTGRES_USER", "revalytiq"),
         "PASSWORD": os.getenv("POSTGRES_PASSWORD", "password"),
     }
-}
 
+DATABASES = {"default": default_db}
+
+# --------------------------------------------------------------
+# REST framework & JWT
+# --------------------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -84,24 +128,59 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.getenv("JWT_ACCESS_LIFETIME", 5))),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("JWT_REFRESH_LIFETIME", 7))),
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-CORS_ALLOW_ALL_ORIGINS = True
+# --------------------------------------------------------------
+# CORS configuration
+# --------------------------------------------------------------
+cors_origins_raw = os.getenv("CORS_ALLOWED_ORIGINS")
+if cors_origins_raw:
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_raw.split(",") if origin.strip()]
+else:
+    CORS_ALLOW_ALL_ORIGINS = True
 
+# --------------------------------------------------------------
+# Static / Media
+# --------------------------------------------------------------
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://redis:6379/0")
+# --------------------------------------------------------------
+# Celery / Redis
+# --------------------------------------------------------------
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", REDIS_URL)
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
-CELERY_TIMEZONE = "UTC"
 
-# Timezone settings
+# --------------------------------------------------------------
+# Timezone / Localization
+# --------------------------------------------------------------
+TIME_ZONE = os.getenv("TIME_ZONE", "UTC")
+CELERY_TIMEZONE = TIME_ZONE
 USE_TZ = True
-TIME_ZONE = "UTC"
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# --------------------------------------------------------------
+# Password validation (secure defaults)
+# --------------------------------------------------------------
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
+# --------------------------------------------------------------
+# Security (auto-activate in production)
+# --------------------------------------------------------------
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

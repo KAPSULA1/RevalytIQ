@@ -46,7 +46,9 @@ export default function Dashboard() {
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
         d.getDate()
       ).padStart(2, "0")}`;
-      buckets.set(key, (buckets.get(key) ?? 0) + o.amount);
+      const numericAmount = Number.parseFloat(String(o.amount ?? 0));
+      if (!Number.isFinite(numericAmount)) return;
+      buckets.set(key, (buckets.get(key) ?? 0) + numericAmount);
     });
     return Array.from(buckets.entries()).map(([x, y]) => {
       const numericY = Number.parseFloat(String(y));

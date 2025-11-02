@@ -5,8 +5,10 @@ services:
     region: oregon
     plan: starter
     envVars:
-      - key: DJANGO_SETTINGS_MODULE
-        value: revalyt.settings.base
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
       - key: SECRET_KEY
         sync: false
       - key: DATABASE_URL

@@ -1,43 +1,42 @@
 "use client";
-import { FormEvent, useState } from "react";
+import Link from "next/link";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import { login } from "@/lib/auth";
+import { useAuth } from "@/lib/store";
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
   const router = useRouter();
+  const setTokens = useAuth((s) => s.setTokens);
+  const access = useAuth((s) => s.access);
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (access) router.replace("/dashboard");
+  }, [access, router]);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
     if (!username.trim() || !password.trim()) {
       setError("Please enter both username and password.");
       return;
     }
-
     setError("");
     setLoading(true);
-
     try {
       const data = await login(username.trim(), password.trim());
-
-      // ✅ შეინახე ტოკენები
-      localStorage.setItem("access", data.access);
-      localStorage.setItem("refresh", data.refresh);
-
-      // ✅ გადადი dashboard-ზე
+      setTokens({ access: data.access, refresh: data.refresh });
+      toast.success("Welcome back!");
       router.push("/dashboard");
     } catch (err) {
       if (isAxiosError(err)) {
-        if (err.response?.status === 401) {
-          setError("Invalid username or password.");
-        } else {
-          setError("Login failed. Try again later.");
-        }
+        setError(err.response?.status === 401 ? "Invalid credentials." : "Login failed.");
       } else {
         setError("Unexpected error occurred.");
       }
@@ -48,10 +47,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white shadow-lg rounded-2xl p-6 w-96 flex flex-col gap-4"
-      >
+      <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-2xl p-6 w-96 flex flex-col gap-4">
         <h2 className="text-2xl font-semibold text-center">RevalytIQ Login</h2>
 
         <input
@@ -79,6 +75,12 @@ export default function LoginPage() {
         >
           {loading ? "Signing in..." : "Sign In"}
         </button>
+
+        <div className="text-sm text-center text-gray-600 flex items-center justify-center gap-3">
+          <Link href="/signup" className="hover:underline">Create account</Link>
+          <span>·</span>
+          <Link href="/forgot-password" className="hover:underline">Forgot password?</Link>
+        </div>
       </form>
     </div>
   );
