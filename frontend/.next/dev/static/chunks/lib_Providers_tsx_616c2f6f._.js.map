@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///home/kapo/Projects/RevalytIQ/frontend/lib/Providers.tsx"],"sourcesContent":["\"use client\";\nimport { QueryClient, QueryClientProvider } from \"@tanstack/react-query\";\nimport { ReactNode, useState } from \"react\";\n\nexport default function Providers({ children }: { children: ReactNode }) {\n  const [client] = useState(() => new QueryClient());\n  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;\n}\n"],"names":["QueryClient","QueryClientProvider","useState","jsx","_jsx","Providers","children","client"],"mappings":";;;;AACA,SAASA,WAAW,EAAEC,mBAAmB,QAAQ,uBAAuB;;AACxE,SAAoBC,QAAQ,QAAQ,OAAO;AAAC,SAAAC,GAAA,IAAAC,IAAA;;AAF5C,YAAY;;;;AAIG,mBAAmB,EAAEE,QAAAA,EAAmC,EAAE;;IACvE,MAAM,CAACC,MAAM,CAAC,GAAGL,8UAAQ;8BAAC,IAAM,IAAIF,wQAAW,CAAC,CAAC,CAAC;;IAClD,OAAA,WAAA,OAAOI,8UAAA,EAACH,gTAAmB,EAAA;QAACM,MAAM,EAAEA,MAAO;QAAAD,QAAA,EAAEA;IAAQ,CAAsB,CAAC;AAC9E;;KAHwBD,SAASA","ignoreList":[],"debugId":null}}]
-}
