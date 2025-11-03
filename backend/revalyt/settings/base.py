@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     # Third-party
     "rest_framework",
     "corsheaders",
+    "drf_spectacular",
     "rest_framework_simplejwt.token_blacklist",
     # Local apps
     "core",
@@ -133,6 +134,7 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SIMPLE_JWT = {
@@ -149,6 +151,13 @@ SIMPLE_JWT = {
     "AUTH_COOKIE_PATH": os.getenv("JWT_COOKIE_PATH", "/"),
     "AUTH_COOKIE_SAMESITE": os.getenv("JWT_COOKIE_SAMESITE", "None"),
     "AUTH_COOKIE_DOMAIN": os.getenv("JWT_COOKIE_DOMAIN"),
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "RevalytIQ API",
+    "DESCRIPTION": "REST API powering the RevalytIQ analytics platform.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 # --------------------------------------------------------------
