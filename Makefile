@@ -1,4 +1,4 @@
-.PHONY: be-install be-run be-test be-lint fe-install fe-dev fe-build fe-test up down
+ .PHONY: be-install be-run be-test be-lint fe-install fe-dev fe-build fe-test up down celery-worker celery-beat
 
 be-install:
 	@python -m pip install --upgrade pip
@@ -32,3 +32,9 @@ up:
 
 down:
 	docker-compose down
+
+celery-worker:
+	cd backend && celery -A revalyt worker -l INFO
+
+celery-beat:
+	cd backend && celery -A revalyt beat -l INFO

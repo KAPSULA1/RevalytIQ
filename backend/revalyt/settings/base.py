@@ -9,10 +9,13 @@ Covers:
 """
 
 from __future__ import annotations
+
 import os
 from datetime import timedelta
 from pathlib import Path
 from urllib.parse import urlparse
+
+from celery.schedules import crontab
 
 # --------------------------------------------------------------
 # Core paths and environment flags
@@ -135,6 +138,8 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": int(os.getenv("API_PAGE_SIZE", 50)),
 }
 
 SIMPLE_JWT = {
@@ -194,6 +199,13 @@ MEDIA_ROOT = BASE_DIR / "media"
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", REDIS_URL)
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_BEAT_SCHEDULE = {
+    "generate-daily-kpi": {
+        "task": "analytics.tasks.generate_daily_report",
+        "schedule": crontab(hour=0, minute=0),
+        "options": {"expires": 3600},
+    }
+}
 
 # --------------------------------------------------------------
 # Timezone / Localization
