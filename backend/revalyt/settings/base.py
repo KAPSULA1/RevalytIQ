@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     # Third-party
     "rest_framework",
     "corsheaders",
+    "rest_framework_simplejwt.token_blacklist",
     # Local apps
     "core",
     "analytics",
@@ -128,7 +129,7 @@ DATABASES = {"default": default_db}
 # --------------------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "revalyt.authentication.CookieJWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
@@ -138,6 +139,16 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.getenv("JWT_ACCESS_LIFETIME", 5))),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("JWT_REFRESH_LIFETIME", 7))),
     "AUTH_HEADER_TYPES": ("Bearer",),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
+    "AUTH_COOKIE": os.getenv("JWT_ACCESS_COOKIE_NAME", "revalyt_access"),
+    "AUTH_COOKIE_REFRESH": os.getenv("JWT_REFRESH_COOKIE_NAME", "revalyt_refresh"),
+    "AUTH_COOKIE_SECURE": os.getenv("JWT_COOKIE_SECURE", "False" if DEBUG else "True").lower() == "true",
+    "AUTH_COOKIE_HTTP_ONLY": True,
+    "AUTH_COOKIE_PATH": os.getenv("JWT_COOKIE_PATH", "/"),
+    "AUTH_COOKIE_SAMESITE": os.getenv("JWT_COOKIE_SAMESITE", "None"),
+    "AUTH_COOKIE_DOMAIN": os.getenv("JWT_COOKIE_DOMAIN"),
 }
 
 # --------------------------------------------------------------

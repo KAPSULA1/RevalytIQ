@@ -1,30 +1,18 @@
 import { create } from "zustand";
+import type { CurrentUser } from "./auth";
 
 type AuthState = {
-  access: string | null;
-  refresh: string | null;
-  setTokens: (t: { access: string; refresh: string }) => void;
+  user: CurrentUser | null;
+  initialized: boolean;
+  setUser: (user: CurrentUser | null) => void;
+  setInitialized: (value: boolean) => void;
   clear: () => void;
 };
 
 export const useAuth = create<AuthState>((set) => ({
-  access: null,
-  refresh: null,
-  setTokens: ({ access, refresh }) => {
-    localStorage.setItem("access", access);
-    localStorage.setItem("refresh", refresh);
-    set({ access, refresh });
-  },
-  clear: () => {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
-    set({ access: null, refresh: null });
-  }
+  user: null,
+  initialized: false,
+  setUser: (user) => set({ user }),
+  setInitialized: (value) => set({ initialized: value }),
+  clear: () => set({ user: null, initialized: true }),
 }));
-
-export const hydrateAuthFromStorage = () => {
-  if (typeof window === "undefined") return;
-  const access = localStorage.getItem("access");
-  const refresh = localStorage.getItem("refresh");
-  if (access && refresh) useAuth.setState({ access, refresh });
-};

@@ -1,12 +1,7 @@
 import { api } from "./api";
 
-export interface AuthTokens {
-  access: string;
-  refresh: string;
-}
-
 export async function login(username: string, password: string) {
-  const { data } = await api.post<AuthTokens>("/api/auth/token/", { username, password });
+  const { data } = await api.post<{ detail: string }>("/api/auth/token/", { username, password });
   return data;
 }
 
@@ -72,6 +67,10 @@ export interface ProfileUpdatePayload {
 export async function updateProfile(payload: ProfileUpdatePayload) {
   const { data } = await api.patch<CurrentUser>("/api/auth/profile/", payload);
   return data;
+}
+
+export async function logout() {
+  await api.post("/api/auth/logout/");
 }
 
 export interface Order {

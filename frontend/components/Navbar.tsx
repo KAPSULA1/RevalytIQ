@@ -3,15 +3,22 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../lib/store";
 import toast from "react-hot-toast";
+import { logout } from "../lib/auth";
 
 export default function Navbar() {
   const router = useRouter();
   const clear = useAuth((s) => s.clear);
 
-  const onLogout = () => {
-    clear();
-    toast.success("Signed out");
-    router.replace("/");
+  const onLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      // ignore errors when clearing cookies
+    } finally {
+      clear();
+      toast.success("Signed out");
+      router.replace("/");
+    }
   };
 
   return (

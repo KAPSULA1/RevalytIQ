@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from rest_framework import status
@@ -12,12 +13,15 @@ class AuthTests(APITestCase):
         self.user = User.objects.create_user(username=self.username, password=self.password)
 
     def test_jwt_token_obtain(self):
-        """✅ Should return access & refresh tokens"""
-        url = reverse("token_obtain_pair")  # matches your /api/auth/token/
+        """✅ Should set jwt cookies on successful login"""
+        url = reverse("token_obtain_pair")
         response = self.client.post(url, {"username": self.username, "password": self.password}, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("access", response.data)
-        self.assertIn("refresh", response.data)
+        self.assertIn("detail", response.data)
+        access_cookie = settings.SIMPLE_JWT["AUTH_COOKIE"]
+        refresh_cookie = settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"]
+        self.assertIn(access_cookie, response.cookies)
+        self.assertIn(refresh_cookie, response.cookies)
 
     def test_invalid_credentials(self):
         """❌ Should fail on wrong password"""
