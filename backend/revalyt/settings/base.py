@@ -143,12 +143,22 @@ SIMPLE_JWT = {
 # --------------------------------------------------------------
 # CORS configuration
 # --------------------------------------------------------------
-cors_origins_raw = os.getenv("CORS_ALLOWED_ORIGINS")
-if cors_origins_raw:
-    CORS_ALLOW_ALL_ORIGINS = False
-    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_raw.split(",") if origin.strip()]
-else:
-    CORS_ALLOW_ALL_ORIGINS = True
+cors_origins_raw = os.getenv("CORS_ALLOWED_ORIGINS", "")
+default_frontend_origin = os.getenv("DEFAULT_FRONTEND_ORIGIN", "http://localhost:3000")
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in cors_origins_raw.split(",")
+    if origin.strip()
+] or ([default_frontend_origin] if DEBUG else [])
+CORS_ALLOW_CREDENTIALS = True
+
+csrf_trusted_raw = os.getenv("CSRF_TRUSTED_ORIGINS", "")
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in csrf_trusted_raw.split(",")
+    if origin.strip()
+] or ([default_frontend_origin] if DEBUG else [])
 
 # --------------------------------------------------------------
 # Static / Media
@@ -186,8 +196,18 @@ AUTH_PASSWORD_VALIDATORS = [
 # --------------------------------------------------------------
 # Security (auto-activate in production)
 # --------------------------------------------------------------
+SECURE_REFERRER_POLICY = os.getenv("SECURE_REFERRER_POLICY", "strict-origin-when-cross-origin")
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "False" if DEBUG else "True").lower() == "true"
+CSRF_COOKIE_SECURE = os.getenv("CSRF_COOKIE_SECURE", "False" if DEBUG else "True").lower() == "true"
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Lax" if DEBUG else "None")
+CSRF_COOKIE_SAMESITE = os.getenv("CSRF_COOKIE_SAMESITE", "Lax" if DEBUG else "None")
+SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "0" if DEBUG else "31536000"))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
+
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
