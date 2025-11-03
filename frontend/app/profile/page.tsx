@@ -1,15 +1,17 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { me, updateProfile } from "@/lib/auth";
+import { logout, updateProfile } from "@/lib/auth";
 import { useAuth } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const access = useAuth((s) => s.access);
+  const user = useAuth((s) => s.user);
+  const initialized = useAuth((s) => s.initialized);
   const clear = useAuth((s) => s.clear);
+  const setUser = useAuth((s) => s.setUser);
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -17,26 +19,22 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!access) {
+    if (!initialized) return;
+    if (!user) {
       router.replace("/");
       return;
     }
-    (async () => {
-      try {
-        const u = await me();
-        setUsername(u.username);
-        setEmail(u.email ?? "");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [access, router]);
+    setUsername(user.username);
+    setEmail(user.email ?? "");
+    setLoading(false);
+  }, [initialized, user, router]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await updateProfile({ username, email });
+      const updated = await updateProfile({ username, email });
+      setUser(updated);
       toast.success("Profile updated");
     } catch (e) {
       toast.error("Update failed");
@@ -45,9 +43,15 @@ export default function ProfilePage() {
     }
   };
 
-  const onLogout = () => {
-    clear();
-    router.replace("/");
+  const onLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      // ignore errors during logout
+    } finally {
+      clear();
+      router.replace("/");
+    }
   };
 
   if (loading) {

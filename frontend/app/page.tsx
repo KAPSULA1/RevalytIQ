@@ -3,14 +3,15 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
-import { login } from "@/lib/auth";
+import { login, me } from "@/lib/auth";
 import { useAuth } from "@/lib/store";
 import toast from "react-hot-toast";
 
 export default function LoginPage() {
   const router = useRouter();
-  const setTokens = useAuth((s) => s.setTokens);
-  const access = useAuth((s) => s.access);
+  const user = useAuth((s) => s.user);
+  const setUser = useAuth((s) => s.setUser);
+  const setInitialized = useAuth((s) => s.setInitialized);
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -18,8 +19,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (access) router.replace("/dashboard");
-  }, [access, router]);
+    if (user) router.replace("/dashboard");
+  }, [user, router]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -30,8 +31,10 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      const data = await login(username.trim(), password.trim());
-      setTokens({ access: data.access, refresh: data.refresh });
+      await login(username.trim(), password.trim());
+      const currentUser = await me();
+      setUser(currentUser);
+      setInitialized(true);
       toast.success("Welcome back!");
       router.push("/dashboard");
     } catch (err) {

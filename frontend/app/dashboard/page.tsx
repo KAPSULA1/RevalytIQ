@@ -9,30 +9,32 @@ import KPIStat from "./components/KPIStat";
 import RevenueChart from "./components/RevenueChart";
 import OrdersTable from "./components/OrdersTable";
 import { fetchKPIs, fetchOrders, Order } from "../../lib/auth";
-import { hydrateAuthFromStorage, useAuth } from "../../lib/store";
+import { useAuth } from "../../lib/store";
 
 export default function Dashboard() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const access = useAuth((s) => s.access);
+  const user = useAuth((s) => s.user);
+  const initialized = useAuth((s) => s.initialized);
 
   // 🔐 Authentication check
   useEffect(() => {
-    hydrateAuthFromStorage();
-    const token = useAuth.getState().access;
-    if (!token) router.replace("/");
-  }, [router]);
+    if (!initialized) return;
+    if (!user) {
+      router.replace("/");
+    }
+  }, [initialized, user, router]);
 
   // 📊 Fetch KPIs and Orders
   const kpiQ = useQuery({
     queryKey: ["kpis"],
     queryFn: fetchKPIs,
-    enabled: !!access,
+    enabled: initialized && !!user,
   });
   const ordersQ = useQuery({
     queryKey: ["orders"],
     queryFn: fetchOrders,
-    enabled: !!access,
+    enabled: initialized && !!user,
   });
 
   // 💰 Aggregate revenue over time
@@ -72,7 +74,7 @@ export default function Dashboard() {
   const anyLoading = kpiQ.isLoading || ordersQ.isLoading;
   const anyError = kpiQ.isError || ordersQ.isError;
 
-  if (anyLoading) {
+  if (!initialized || anyLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen text-gray-500">
         Loading analytics data...
