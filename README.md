@@ -8,8 +8,8 @@ RevalytIQ is a production-grade analytics platform delivering revenue insights v
 
 `django` `nextjs` `dashboard` `analytics` `celery` `redis` `jwt` `realtime` `websocket`
 
-[![CI Backend](https://github.com/OWNER/REPO/actions/workflows/backend.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/backend.yml)
-[![CI Frontend](https://github.com/OWNER/REPO/actions/workflows/frontend.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/frontend.yml)
+[![CI](https://github.com/KAPSULA1/RevalytIQ/actions/workflows/ci.yml/badge.svg)](https://github.com/KAPSULA1/RevalytIQ/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-70%25-brightgreen)](#testing)
 [![Deploy Backend](https://render.com/deploy)](#deployment)
 [![Deploy Frontend](https://vercel.com/button)](#deployment)
 
@@ -68,11 +68,18 @@ flowchart LR
 - **Data:** PostgreSQL, Redis.
 - **Tooling:** Jest, Pytest, GitHub Actions, Docker, Render, Vercel.
 
+## 💡 Why This Stack
+
+- **Type-safe UI:** Next.js 16 + TypeScript deliver fast iteration with React Server Components and predictable DX.
+- **Battle-tested API:** Django REST Framework keeps business logic explicit while SimpleJWT + cookie auth align with modern security guidance.
+- **Data freshness:** Celery workers, Redis, and scheduled KPI aggregation keep dashboards fast without blocking API traffic.
+- **Operational polish:** Docker Compose, Render, and Vercel manifests provide copy/paste infrastructure for portfolio or production rollouts.
+
 ## 🧠 API Documentation
 
-- **Swagger UI:** http://127.0.0.1:8000/api/docs/ served by drf-yasg for interactive exploration and JWT-authenticated testing.
-- **ReDoc:** http://127.0.0.1:8000/api/redoc/ delivers a human-friendly reference generated from the same OpenAPI schema.
-- **Postman Collection:** Import `docs/RevalytIQ.postman_collection.json` for sharable requests aligned with the drf-yasg schema exports.
+- **Swagger UI:** http://127.0.0.1:8010/api/docs/ powered by drf-spectacular, including JWT cookie auth for live testing.
+- **ReDoc:** http://127.0.0.1:8010/api/redoc/ delivers the same OpenAPI schema with human-friendly navigation.
+- **Postman Collection:** Import `docs/postman/RevalytIQ.postman_collection.json` to explore endpoints with ready-made examples.
 
 ## Screenshots
 
@@ -81,10 +88,24 @@ flowchart LR
 | Dashboard | ![Dashboard](docs/screenshots/dashboard.png) |
 | Signup Flow | ![Signup](docs/screenshots/signup.png) |
 | KPIs | ![KPIs](docs/screenshots/kpis.png) |
+| Swagger UI | ![Swagger](docs/screenshots/swagger.png) |
+| Postman Collection | ![Postman](docs/screenshots/postman.png) |
 
 > Screenshots live in `docs/screenshots/`. Replace with actual captures as the UI evolves.
 
 ## Quick Start
+
+### All-in-one (Docker Compose)
+
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env.local
+docker compose up -d --build
+```
+
+- Frontend: http://localhost:3100
+- API + docs: http://127.0.0.1:8010
+- Healthcheck: http://127.0.0.1:8010/health/
 
 ### Backend (Django / DRF)
 
@@ -96,7 +117,7 @@ source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 python manage.py migrate
-python manage.py runserver
+python manage.py runserver 0.0.0.0:8010
 ```
 
 ### Frontend (Next.js)
@@ -105,7 +126,7 @@ python manage.py runserver
 cp frontend/.env.example frontend/.env.local
 cd frontend
 pnpm install
-pnpm dev
+pnpm dev --port 3100
 ```
 
 ### Using the Makefile
@@ -113,7 +134,8 @@ pnpm dev
 ```bash
 make be-install
 make fe-install
-make up   # optional docker-compose
+make up
+# optional: make celery-worker | make celery-beat
 ```
 
 ## 🧪 Demo / Seed Data
@@ -138,7 +160,7 @@ The `/health/` endpoint reports JSON status for the PostgreSQL database, Redis c
 | `REDIS_URL` | Redis cache URL | `redis://localhost:6379/0` |
 | `CELERY_BROKER_URL` | Celery broker URL | `redis://localhost:6379/1` |
 | `ALLOWED_HOSTS` | Comma-separated hosts | `localhost,127.0.0.1` |
-| `CORS_ALLOWED_ORIGINS` | Comma-separated origins | `http://localhost:3000` |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated origins | `http://localhost:3100` |
 | `JWT_ACCESS_LIFETIME` | Minutes | `5` |
 | `JWT_REFRESH_LIFETIME` | Days | `7` |
 | `TIME_ZONE` | Server timezone | `UTC` |
@@ -147,15 +169,16 @@ The `/health/` endpoint reports JSON status for the PostgreSQL database, Redis c
 
 | Variable | Description | Example |
 | --- | --- | --- |
-| `NEXT_PUBLIC_API_URL` | Base URL of the backend API | `http://127.0.0.1:8000` |
+| `NEXT_PUBLIC_API_URL` | Base URL of the backend API | `http://127.0.0.1:8010` |
 | `NEXT_PUBLIC_APP_NAME` | Application branding | `RevalytIQ` |
 | `NEXT_PUBLIC_SENTRY_DSN` | Optional Sentry DSN | *(leave blank or provide DSN)* |
 
 ## Testing
 
-- **Backend:** `make be-test` (runs `pytest -q --disable-warnings`).
-- **Frontend:** `make fe-test` (runs `pnpm test -- --watch=false`).
-- Coverage reports are uploaded automatically in CI.
+- **Backend:** `make be-test` (`pytest --cov --cov-fail-under=70`).
+- **Frontend:** `make fe-test` (`pnpm test -- --coverage --runInBand`).
+- **Lint & types:** `make be-lint` | `make fe-lint` ensure ruff/black/mypy and ESLint/Prettier stay green.
+- Coverage summaries are published from CI artifacts and surfaced via the badge above.
 
 ## Docker (Optional)
 
@@ -181,10 +204,11 @@ Ensure `.env` files are populated before running Compose.
 
 ## Troubleshooting
 
+- **Ports already in use:** update `.env` overrides or stop conflicting services if `3100` / `8010` are occupied.
 - **JWT issues:** Ensure system clocks are synced; adjust `JWT_ACCESS_LIFETIME`/`JWT_REFRESH_LIFETIME`.
-- **CORS errors:** Double-check `CORS_ALLOWED_ORIGINS` and `NEXT_PUBLIC_API_URL`.
+- **CORS errors:** Double-check `CORS_ALLOWED_ORIGINS` and `NEXT_PUBLIC_API_URL` match the new port mapping.
 - **Database connections:** Verify `DATABASE_URL` matches Render/Postgres settings.
-- **Celery tasks not running:** Confirm Redis broker is reachable and worker processes are deployed.
+- **Celery tasks not running:** Confirm Redis broker is reachable and worker processes are deployed (`make celery-worker`).
 
 ## 🛡️ Security & Maintenance
 
