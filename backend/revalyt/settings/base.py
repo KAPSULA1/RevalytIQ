@@ -96,14 +96,21 @@ TEMPLATES = [
 DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL:
     parsed = urlparse(DATABASE_URL)
-    default_db = {
-        "ENGINE": "django.db.backends.postgresql",
-        "HOST": parsed.hostname or "localhost",
-        "PORT": str(parsed.port or "5432"),
-        "NAME": (parsed.path or "/revalytiq").lstrip("/"),
-        "USER": parsed.username or "",
-        "PASSWORD": parsed.password or "",
-    }
+    scheme = (parsed.scheme or "").lower()
+    if scheme in {"sqlite", "sqlite3"}:
+        default_db = {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": parsed.path or os.path.join(BASE_DIR, "db.sqlite3"),
+        }
+    else:
+        default_db = {
+            "ENGINE": "django.db.backends.postgresql",
+            "HOST": parsed.hostname or "localhost",
+            "PORT": str(parsed.port or "5432"),
+            "NAME": (parsed.path or "/revalytiq").lstrip("/"),
+            "USER": parsed.username or "",
+            "PASSWORD": parsed.password or "",
+        }
 else:
     default_db = {
         "ENGINE": "django.db.backends.postgresql",
