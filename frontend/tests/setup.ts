@@ -1,7 +1,10 @@
 import "@testing-library/jest-dom";
 import "whatwg-fetch";
+import { act } from "@testing-library/react";
 import { useAuth } from "../lib/store";
 
 afterEach(() => {
-  useAuth.setState({ user: null, initialized: false });
+  act(() => {
+    useAuth.setState({ user: null, initialized: false });
+  });
 });
