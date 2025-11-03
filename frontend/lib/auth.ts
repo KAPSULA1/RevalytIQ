@@ -29,6 +29,7 @@ export async function register(
 export interface ForgotPasswordResponse {
   detail: string;
   token?: string;
+  uid?: string;
 }
 
 export async function forgotPassword(email: string) {
@@ -38,6 +39,7 @@ export async function forgotPassword(email: string) {
 
 export interface ResetPasswordPayload {
   email: string;
+  uid: string;
   token: string;
   new_password: string;
   new_password2: string;

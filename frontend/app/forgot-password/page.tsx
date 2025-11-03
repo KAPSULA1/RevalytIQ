@@ -8,6 +8,7 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [msg, setMsg] = useState("");
   const [token, setToken] = useState<string | undefined>();
+  const [uid, setUid] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
 
   const onSubmit = async (e: FormEvent) => {
@@ -18,6 +19,7 @@ export default function ForgotPasswordPage() {
       const res = await forgotPassword(email.trim());
       setMsg(res.detail);
       setToken(res.token);
+      setUid(res.uid);
     } finally {
       setLoading(false);
     }
@@ -33,10 +35,19 @@ export default function ForgotPasswordPage() {
           {loading ? "Sending..." : "Send reset link"}
         </button>
         {msg && <p className="text-sm text-center text-gray-700">{msg}</p>}
-        {token && (
-          <p className="text-xs text-center text-gray-500">
-            Demo token: <span className="font-mono">{token}</span>
-          </p>
+        {(token || uid) && (
+          <div className="text-xs text-center text-gray-500 space-y-1">
+            {uid && (
+              <p>
+                Demo UID: <span className="font-mono">{uid}</span>
+              </p>
+            )}
+            {token && (
+              <p>
+                Demo token: <span className="font-mono">{token}</span>
+              </p>
+            )}
+          </div>
         )}
         <div className="text-sm text-center text-gray-600 flex items-center justify-center gap-3">
           <Link href="/" className="hover:underline text-blue-600">
