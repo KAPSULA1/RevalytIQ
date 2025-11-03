@@ -37,22 +37,98 @@ services:
       - key: TIME_ZONE
         value: UTC
     buildCommand: |
-      pip install --upgrade pip
-      pip install -r backend/requirements.txt
-      cd backend && python manage.py collectstatic --noinput || true
+      cd backend
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput || true
     startCommand: |
-      cd backend && gunicorn revalyt.wsgi:application --bind 0.0.0.0:8000
+      cd backend
+      gunicorn revalyt.wsgi:application --bind 0.0.0.0:8000
+    migrateCommand: |
+      cd backend
+      python manage.py migrate --noinput
     healthCheckPath: /health/
+
+  - type: worker
+    name: revalytiq-celery-worker
+    runtime: python
+    region: oregon
+    plan: starter
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromService:
+          type: postgres
+          name: revalytiq-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: revalytiq-redis
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: revalytiq-redis
+          property: connectionString
+      - key: TIME_ZONE
+        value: UTC
+    buildCommand: |
+      cd backend
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: |
+      cd backend
+      celery -A revalyt worker -l INFO
+
+  - type: worker
+    name: revalytiq-celery-beat
+    runtime: python
+    region: oregon
+    plan: starter
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromService:
+          type: postgres
+          name: revalytiq-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: revalytiq-redis
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: revalytiq-redis
+          property: connectionString
+      - key: TIME_ZONE
+        value: UTC
+    buildCommand: |
+      cd backend
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: |
+      cd backend
+      celery -A revalyt beat -l INFO
 
 databases:
   - name: revalytiq-postgres
+    type: postgres
     plan: starter
+    region: oregon
   - name: revalytiq-redis
+    type: redis
     plan: starter
-    dataStore: redis
-
-# OPTIONAL: If /health/ route is missing, add the following to revalyt/urls.py:
-#   from django.http import JsonResponse
-#   def health(_request):
-#       return JsonResponse({"status": "ok"})
-#   urlpatterns += [path("health/", health)]
+    region: oregon
