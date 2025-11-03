@@ -1,11 +1,17 @@
 # RevalytIQ
 
+## 🚀 Project Overview
+
+RevalytIQ is a production-grade analytics platform delivering revenue insights via a Django REST API and a modern Next.js dashboard. Authentication is powered by JWT (SimpleJWT), while background analytics leverage Celery and Redis, and WebSockets keep dashboards current in real time.
+
+## 🧩 Tech Topics / Tags
+
+`django` `nextjs` `dashboard` `analytics` `celery` `redis` `jwt` `realtime` `websocket`
+
 [![CI Backend](https://github.com/OWNER/REPO/actions/workflows/backend.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/backend.yml)
 [![CI Frontend](https://github.com/OWNER/REPO/actions/workflows/frontend.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/frontend.yml)
 [![Deploy Backend](https://render.com/deploy)](#deployment)
 [![Deploy Frontend](https://vercel.com/button)](#deployment)
-
-Enterprise analytics platform delivering revenue insights via a Django REST API and a modern Next.js dashboard. Authentication is powered by JWT (SimpleJWT), while background analytics leverage Celery and Redis.
 
 ## Architecture
 
@@ -62,6 +68,12 @@ flowchart LR
 - **Data:** PostgreSQL, Redis.
 - **Tooling:** Jest, Pytest, GitHub Actions, Docker, Render, Vercel.
 
+## 🧠 API Documentation
+
+- **Swagger UI:** http://127.0.0.1:8000/api/docs/ served by drf-yasg for interactive exploration and JWT-authenticated testing.
+- **ReDoc:** http://127.0.0.1:8000/api/redoc/ delivers a human-friendly reference generated from the same OpenAPI schema.
+- **Postman Collection:** Import `docs/RevalytIQ.postman_collection.json` for sharable requests aligned with the drf-yasg schema exports.
+
 ## Screenshots
 
 | View | Preview |
@@ -103,6 +115,15 @@ make be-install
 make fe-install
 make up   # optional docker-compose
 ```
+
+## 🧪 Demo / Seed Data
+
+- Load curated analytics fixtures with `python manage.py loaddata demo.json` from the `backend` directory.
+- Populate randomized but realistic datasets via [`django-seed`](https://github.com/Brobin/django-seed) once the virtual environment is active.
+
+## 💓 Healthcheck
+
+The `/health/` endpoint reports JSON status for the PostgreSQL database, Redis cache, and Celery workers, enabling automated uptime probes and observability dashboards.
 
 ## Environment Variables
 
@@ -146,6 +167,13 @@ make down
 
 Ensure `.env` files are populated before running Compose.
 
+## ⚙️ Deployment Shortcuts
+
+| Target | Shortcut |
+| --- | --- |
+| Backend (Render) | [![Deploy to Render](https://render.com/deploy)](https://render.com/deploy) |
+| Frontend (Vercel) | [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/import/git) |
+
 ## Deployment
 
 - **Backend (Render):** Uses `render.yaml` to provision a Web Service plus managed PostgreSQL and Redis add-ons. Build installs backend requirements and collects static assets. Start command runs `gunicorn revalyt.wsgi:application --bind 0.0.0.0:8000`.
@@ -157,6 +185,16 @@ Ensure `.env` files are populated before running Compose.
 - **CORS errors:** Double-check `CORS_ALLOWED_ORIGINS` and `NEXT_PUBLIC_API_URL`.
 - **Database connections:** Verify `DATABASE_URL` matches Render/Postgres settings.
 - **Celery tasks not running:** Confirm Redis broker is reachable and worker processes are deployed.
+
+## 🛡️ Security & Maintenance
+
+- Automated dependency updates are handled by Dependabot across Python and JavaScript packages.
+- CodeQL static analysis runs in CI to flag vulnerabilities before deployment.
+- GitHub Actions pipelines cover tests, linting, and deployment checks for the Django backend and Next.js frontend.
+
+## 📜 License
+
+This project is released under the [MIT License](./LICENSE), enabling commercial and open-source use with attribution.
 
 ## License & Contact
 
