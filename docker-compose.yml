@@ -34,7 +34,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    ports: ["8000:8000"]
+    ports: ["8010:8000"]
     healthcheck:
       test:
         [
@@ -72,8 +72,10 @@ services:
     build: ./frontend
     volumes: ["./frontend:/app"]
     env_file: [.env]
-    depends_on: [backend]
-    ports: ["3000:3000"]
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports: ["3100:3000"]
 
 volumes:
   dbdata:
