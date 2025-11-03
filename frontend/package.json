@@ -6,8 +6,11 @@
     "dev": "next dev -p 3100",
     "build": "next build",
     "start": "next start -p 3100",
-    "lint": "eslint .",
-    "test": "jest --watchAll=false"
+    "lint": "eslint . --max-warnings=0",
+    "test": "jest --coverage --runInBand",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write \"{app,components,lib,tests}/**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"{app,components,lib,tests}/**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "dependencies": {
     "@tanstack/react-query": "5.90.6",

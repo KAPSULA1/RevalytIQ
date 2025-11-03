@@ -11,9 +11,9 @@ be-test:
 	cd backend && pytest -q --disable-warnings
 
 be-lint:
-	@command -v black >/dev/null 2>&1 && black backend || echo "black not installed"
-	@command -v isort >/dev/null 2>&1 && isort backend || echo "isort not installed"
-	@command -v flake8 >/dev/null 2>&1 && flake8 backend || echo "flake8 not installed"
+	ruff check backend
+	black --check backend
+	mypy backend
 
 fe-install:
 	cd frontend && pnpm install
@@ -25,7 +25,11 @@ fe-build:
 	cd frontend && pnpm build
 
 fe-test:
-	cd frontend && pnpm test -- --watch=false
+	cd frontend && pnpm test
+
+fe-lint:
+	cd frontend && pnpm lint
+	cd frontend && pnpm format:check
 
 up:
 	docker-compose up -d

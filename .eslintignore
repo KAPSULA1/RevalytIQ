@@ -1,0 +1,4 @@
+node_modules/
+.next/
+dist/
+frontend/pnpm-lock.yaml
