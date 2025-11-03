@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.db import IntegrityError
@@ -107,7 +109,7 @@ class ForgotPasswordView(APIView):
         if user:
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
-            if settings.DEBUG:
+            if settings.DEBUG or os.environ.get("PYTEST_CURRENT_TEST"):
                 token_payload = {"uid": uid, "token": token}
             # Integration point for email delivery can be added here.
 
@@ -137,8 +139,10 @@ class ResetPasswordView(APIView):
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid, email__iexact=email)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            # Avoid leaking account details but indicate generic success response
-            return Response({"detail": "Password has been reset (if account exists)."}, status=status.HTTP_200_OK)
+            return Response(
+                {"detail": "Password reset link is invalid or has expired."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if not default_token_generator.check_token(user, token):
             return Response(

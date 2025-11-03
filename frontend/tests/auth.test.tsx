@@ -90,7 +90,7 @@ describe("SignupPage", () => {
     fireEvent.change(screen.getByPlaceholderText("Password"), {
       target: { value: "password123" },
     });
-    fireEvent.change(screen.getByPlaceholderText("Confirm Password"), {
+    fireEvent.change(screen.getByPlaceholderText("Confirm password"), {
       target: { value: "password123" },
     });
 
