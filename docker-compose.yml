@@ -8,32 +8,65 @@ services:
       POSTGRES_PASSWORD: password
     ports: ["5432:5432"]
     volumes: [dbdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U revalytiq"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7
     ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
-    command: ["sh", "/app/compose/entrypoint.sh"]
+    entrypoint: ["/app/compose/entrypoint.sh"]
+    command: ["gunicorn", "revalyt.wsgi:application", "--bind", "0.0.0.0:8000"]
     volumes: ["./backend:/app"]
     env_file: [.env]
-    depends_on: [db, redis]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     ports: ["8000:8000"]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health/').status == 200 else 1)\"",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   worker:
     build: ./backend
-    command: ["celery", "-A", "bizmetrics", "worker", "-l", "INFO"]
+    command: ["celery", "-A", "revalyt", "worker", "-l", "INFO"]
     volumes: ["./backend:/app"]
     env_file: [.env]
-    depends_on: [backend, redis]
+    depends_on:
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   beat:
     build: ./backend
-    command: ["celery", "-A", "bizmetrics", "beat", "-l", "INFO"]
+    command: ["celery", "-A", "revalyt", "beat", "-l", "INFO"]
     volumes: ["./backend:/app"]
     env_file: [.env]
-    depends_on: [backend, redis]
+    depends_on:
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   frontend:
     build: ./frontend
