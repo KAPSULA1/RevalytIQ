@@ -5,6 +5,8 @@ import os
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.db import IntegrityError
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -24,6 +26,7 @@ from users.serializers import (
 User = get_user_model()
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class RegisterView(generics.CreateAPIView):
     """Create a new user account."""
     serializer_class = RegisterSerializer
@@ -94,6 +97,7 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         return Response(UserSerializer(request.user).data)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class ForgotPasswordView(APIView):
     """Accept email and (in DEBUG) return a demo token. In production just 200."""
     permission_classes = [permissions.AllowAny]
@@ -122,6 +126,7 @@ class ForgotPasswordView(APIView):
         )
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class ResetPasswordView(APIView):
     """Reset password using email+token (token checking is mocked for demo)."""
     permission_classes = [permissions.AllowAny]

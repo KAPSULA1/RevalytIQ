@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import timedelta
 
 from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -55,6 +57,7 @@ def _clear_auth_cookies(response: Response) -> None:
             response.delete_cookie(cookie_name, **cookie_kwargs)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class CookieTokenObtainPairView(TokenObtainPairView):
     """
     Issue JWT pair and persist them in httpOnly cookies.
@@ -75,6 +78,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
         return response
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class CookieTokenRefreshView(TokenRefreshView):
     """
     Rotate refresh tokens stored in cookies.
