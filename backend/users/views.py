@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
 from django.db import IntegrityError
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.conf import settings
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
 from users.serializers import (
     RegisterSerializer,
@@ -99,13 +102,20 @@ class ForgotPasswordView(APIView):
         ser.is_valid(raise_exception=True)
         email = ser.validated_data["email"]
 
-        # For demo: if user exists, generate a fake token; otherwise always return 200
         token_payload = {}
-        if settings.DEBUG and User.objects.filter(email__iexact=email).exists():
-            token_payload = {"token": "demo-reset-token"}
+        user = User.objects.filter(email__iexact=email).first()
+        if user:
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            if settings.DEBUG:
+                token_payload = {"uid": uid, "token": token}
+            # Integration point for email delivery can be added here.
 
         return Response(
-            {"detail": "If an account exists for this email, you will receive further instructions.", **token_payload},
+            {
+                "detail": "If an account exists for this email, you will receive further instructions.",
+                **token_payload,
+            },
             status=status.HTTP_200_OK,
         )
 
@@ -119,13 +129,22 @@ class ResetPasswordView(APIView):
         ser = ResetPasswordSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
         email = ser.validated_data["email"]
+        uidb64 = ser.validated_data["uid"]
         new_password = ser.validated_data["new_password"]
+        token = ser.validated_data["token"]
 
         try:
-            user = User.objects.get(email__iexact=email)
-        except User.DoesNotExist:
-            # Avoid leaking user existence: always 200
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid, email__iexact=email)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            # Avoid leaking account details but indicate generic success response
             return Response({"detail": "Password has been reset (if account exists)."}, status=status.HTTP_200_OK)
+
+        if not default_token_generator.check_token(user, token):
+            return Response(
+                {"detail": "Password reset link is invalid or has expired."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         user.set_password(new_password)
         user.save(update_fields=["password"])

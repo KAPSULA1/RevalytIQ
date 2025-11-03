@@ -73,6 +73,7 @@ class ForgotPasswordSerializer(serializers.Serializer):
 
 class ResetPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField()
+    uid = serializers.CharField()
     token = serializers.CharField()
     new_password = serializers.CharField(min_length=8)
     new_password2 = serializers.CharField(min_length=8)

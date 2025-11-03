@@ -8,6 +8,7 @@ import { resetPassword } from "@/lib/auth";
 export default function ResetPasswordPage() {
   const params = useSearchParams();
   const [email, setEmail] = useState(params.get("email") ?? "");
+  const [uid, setUid] = useState(params.get("uid") ?? "");
   const [token, setToken] = useState(params.get("token") ?? "");
   const [p1, setP1] = useState("");
   const [p2, setP2] = useState("");
@@ -17,7 +18,7 @@ export default function ResetPasswordPage() {
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setMsg("");
-    if (!email || !token || !p1 || !p2) {
+    if (!email || !uid || !token || !p1 || !p2) {
       setMsg("Please fill all fields.");
       return;
     }
@@ -25,6 +26,7 @@ export default function ResetPasswordPage() {
     try {
       const res = await resetPassword({
         email,
+        uid,
         token,
         new_password: p1,
         new_password2: p2,
@@ -41,6 +43,8 @@ export default function ResetPasswordPage() {
         <h2 className="text-2xl font-semibold text-center">Reset password</h2>
         <input type="email" placeholder="Email" value={email}
           onChange={(e) => setEmail(e.target.value)} className="border p-2 rounded-lg" />
+        <input type="text" placeholder="UID" value={uid}
+          onChange={(e) => setUid(e.target.value)} className="border p-2 rounded-lg" />
         <input type="text" placeholder="Token" value={token}
           onChange={(e) => setToken(e.target.value)} className="border p-2 rounded-lg" />
         <input type="password" placeholder="New password" value={p1}
