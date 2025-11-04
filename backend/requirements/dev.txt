@@ -1,0 +1,10 @@
+-r base.txt
+
+pytest~=8.3
+pytest-django~=4.9
+pytest-cov~=5.0
+black~=24.10
+ruff~=0.7
+isort~=5.13
+mypy~=1.12
+factory-boy~=3.3

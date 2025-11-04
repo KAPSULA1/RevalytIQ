@@ -122,6 +122,3 @@ backend/.venv/
 backend/.env
 frontend/.env
 frontend/.env.local
-# Claude AI local settings
-.claude/
-

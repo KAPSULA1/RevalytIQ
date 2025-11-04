@@ -7,6 +7,8 @@ services:
     envVars:
       - key: ENVIRONMENT
         value: production
+      - key: DJANGO_SETTINGS_MODULE
+        value: revalyt.settings.prod
       - key: DEBUG
         value: "false"
       - key: SECRET_KEY
@@ -41,7 +43,7 @@ services:
     buildCommand: |
       cd backend
       python -m pip install --upgrade pip
-      pip install -r requirements.txt
+      pip install -r requirements/production.txt
       python manage.py collectstatic --noinput || true
     startCommand: |
       cd backend
@@ -59,6 +61,8 @@ services:
     envVars:
       - key: ENVIRONMENT
         value: production
+      - key: DJANGO_SETTINGS_MODULE
+        value: revalyt.settings.prod
       - key: DEBUG
         value: "false"
       - key: SECRET_KEY
@@ -83,7 +87,7 @@ services:
     buildCommand: |
       cd backend
       python -m pip install --upgrade pip
-      pip install -r requirements.txt
+      pip install -r requirements/production.txt
     startCommand: |
       cd backend
       celery -A revalyt worker -l INFO
@@ -96,6 +100,8 @@ services:
     envVars:
       - key: ENVIRONMENT
         value: production
+      - key: DJANGO_SETTINGS_MODULE
+        value: revalyt.settings.prod
       - key: DEBUG
         value: "false"
       - key: SECRET_KEY
@@ -120,7 +126,7 @@ services:
     buildCommand: |
       cd backend
       python -m pip install --upgrade pip
-      pip install -r requirements.txt
+      pip install -r requirements/production.txt
     startCommand: |
       cd backend
       celery -A revalyt beat -l INFO

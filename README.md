@@ -98,11 +98,15 @@ flowchart LR
 ### All-in-one (Docker Compose)
 
 ```bash
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env.local
+cp backend/.env.example backend/.env          # optional for local dev
+cp frontend/.env.example frontend/.env.local  # optional for local dev
 docker compose up -d --build
 ```
 
+- The Compose stack reads `backend/.env.docker` for container defaults. Edit this
+  file (or export environment variables) if you need different values inside Docker.
+- Use `backend/.env` only for running Django locally (e.g. with
+  `ENVIRONMENT=local` and `DJANGO_SETTINGS_MODULE=revalyt.settings.local`).
 - Frontend: http://localhost:3100
 - API + docs: http://127.0.0.1:8010
 - Healthcheck: http://127.0.0.1:8010/health/
@@ -119,6 +123,10 @@ pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver 0.0.0.0:8010
 ```
+
+> Ensure `backend/.env` sets `DJANGO_SETTINGS_MODULE=revalyt.settings.local` and
+> includes `STATIC_ROOT=staticfiles` (the directory is created automatically when
+> settings load).
 
 ### Frontend (Next.js)
 
@@ -153,9 +161,12 @@ The `/health/` endpoint reports JSON status for the PostgreSQL database, Redis c
 
 | Variable | Description | Example |
 | --- | --- | --- |
-| `ENVIRONMENT` | `local` or `production` | `local` |
-| `DEBUG` | Toggle Django debug mode | `True` |
-| `SECRET_KEY` | Django secret key | `django-insecure-...` |
+| `DJANGO_SETTINGS_MODULE` | Django settings module | `revalyt.settings.local` |
+| `ENVIRONMENT` | Runtime environment label | `local` |
+| `DJANGO_DEBUG` | Toggle Django debug mode | `True` |
+| `DJANGO_SECRET_KEY` | Django secret key | `django-insecure-...` |
+| `STATIC_ROOT` | Target directory for collected static assets | `staticfiles` |
+| `STATIC_URL` | Public URL prefix for static assets | `/static/` |
 | `DATABASE_URL` | PostgreSQL connection URL | `postgres://user:pass@localhost:5432/revalyt` |
 | `REDIS_URL` | Redis cache URL | `redis://localhost:6379/0` |
 | `CELERY_BROKER_URL` | Celery broker URL | `redis://localhost:6379/1` |

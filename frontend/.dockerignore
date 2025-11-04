@@ -1,4 +1,13 @@
 node_modules
 .next
-pnpm-lock.yaml
 .git
+.turbo
+.pnpm-store
+coverage
+dist
+*.log
+*.local
+.env*
+.DS_Store
+Thumbs.db
+tmp

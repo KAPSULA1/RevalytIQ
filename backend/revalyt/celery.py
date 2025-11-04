@@ -1,8 +1,11 @@
 from __future__ import annotations
+
 import os
+
 from celery import Celery
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "revalyt.settings.base")
+settings_module = os.environ.get("DJANGO_SETTINGS_MODULE", "revalyt.settings.prod")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", settings_module)
 
 app = Celery("revalyt")
 app.config_from_object("django.conf:settings", namespace="CELERY")
