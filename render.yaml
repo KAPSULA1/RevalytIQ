@@ -16,6 +16,7 @@ services:
       - key: DATABASE_URL
         fromDatabase:
           name: revalytiq-postgres
+          property: connectionString
       - key: REDIS_URL
         fromService:
           name: revalytiq-redis
@@ -68,6 +69,7 @@ services:
       - key: DATABASE_URL
         fromDatabase:
           name: revalytiq-postgres
+          property: connectionString
       - key: REDIS_URL
         fromService:
           name: revalytiq-redis
@@ -105,6 +107,7 @@ services:
       - key: DATABASE_URL
         fromDatabase:
           name: revalytiq-postgres
+          property: connectionString
       - key: REDIS_URL
         fromService:
           name: revalytiq-redis
