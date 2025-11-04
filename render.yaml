@@ -128,13 +128,13 @@ services:
       cd backend
       celery -A revalyt beat -l INFO
 
-databases:
-  - name: revalytiq-postgres
-    type: postgres
+  - type: redis
+    name: revalytiq-redis
     plan: starter
     region: oregon
 
-  - name: revalytiq-redis
-    type: redis
+databases:
+  - name: revalytiq-postgres
+    type: postgres
     plan: starter
     region: oregon
