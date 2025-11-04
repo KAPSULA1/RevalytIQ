@@ -14,19 +14,17 @@ services:
       - key: SECRET_KEY
         sync: false
       - key: DATABASE_URL
-        fromService:
-          type: postgres
+        fromDatabase:
           name: revalytiq-postgres
-          property: connectionString
       - key: REDIS_URL
         fromService:
-          type: redis
           name: revalytiq-redis
+          type: redis
           property: connectionString
       - key: CELERY_BROKER_URL
         fromService:
-          type: redis
           name: revalytiq-redis
+          type: redis
           property: connectionString
       - key: ALLOWED_HOSTS
         value: revalytiq-backend.onrender.com
@@ -42,7 +40,7 @@ services:
         value: UTC
     buildCommand: |
       cd backend
-      python -m pip install --upgrade pip
+      pip install --upgrade pip
       pip install -r requirements/production.txt
       python manage.py collectstatic --noinput || true
     startCommand: |
@@ -68,25 +66,23 @@ services:
       - key: SECRET_KEY
         sync: false
       - key: DATABASE_URL
-        fromService:
-          type: postgres
+        fromDatabase:
           name: revalytiq-postgres
-          property: connectionString
       - key: REDIS_URL
         fromService:
-          type: redis
           name: revalytiq-redis
+          type: redis
           property: connectionString
       - key: CELERY_BROKER_URL
         fromService:
-          type: redis
           name: revalytiq-redis
+          type: redis
           property: connectionString
       - key: TIME_ZONE
         value: UTC
     buildCommand: |
       cd backend
-      python -m pip install --upgrade pip
+      pip install --upgrade pip
       pip install -r requirements/production.txt
     startCommand: |
       cd backend
@@ -107,25 +103,23 @@ services:
       - key: SECRET_KEY
         sync: false
       - key: DATABASE_URL
-        fromService:
-          type: postgres
+        fromDatabase:
           name: revalytiq-postgres
-          property: connectionString
       - key: REDIS_URL
         fromService:
-          type: redis
           name: revalytiq-redis
+          type: redis
           property: connectionString
       - key: CELERY_BROKER_URL
         fromService:
-          type: redis
           name: revalytiq-redis
+          type: redis
           property: connectionString
       - key: TIME_ZONE
         value: UTC
     buildCommand: |
       cd backend
-      python -m pip install --upgrade pip
+      pip install --upgrade pip
       pip install -r requirements/production.txt
     startCommand: |
       cd backend
@@ -136,6 +130,7 @@ databases:
     type: postgres
     plan: starter
     region: oregon
+
   - name: revalytiq-redis
     type: redis
     plan: starter
