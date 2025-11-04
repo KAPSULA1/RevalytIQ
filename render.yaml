@@ -1,4 +1,9 @@
 services:
+  - type: redis
+    name: revalytiq-redis
+    plan: starter
+    region: oregon
+
   - type: web
     name: revalytiq-backend
     runtime: python
@@ -19,13 +24,13 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
-          name: revalytiq-redis
           type: redis
+          name: revalytiq-redis
           property: connectionString
       - key: CELERY_BROKER_URL
         fromService:
-          name: revalytiq-redis
           type: redis
+          name: revalytiq-redis
           property: connectionString
       - key: ALLOWED_HOSTS
         value: revalytiq-backend.onrender.com
@@ -72,13 +77,13 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
-          name: revalytiq-redis
           type: redis
+          name: revalytiq-redis
           property: connectionString
       - key: CELERY_BROKER_URL
         fromService:
-          name: revalytiq-redis
           type: redis
+          name: revalytiq-redis
           property: connectionString
       - key: TIME_ZONE
         value: UTC
@@ -110,13 +115,13 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
-          name: revalytiq-redis
           type: redis
+          name: revalytiq-redis
           property: connectionString
       - key: CELERY_BROKER_URL
         fromService:
-          name: revalytiq-redis
           type: redis
+          name: revalytiq-redis
           property: connectionString
       - key: TIME_ZONE
         value: UTC
@@ -127,11 +132,6 @@ services:
     startCommand: |
       cd backend
       celery -A revalyt beat -l INFO
-
-  - type: redis
-    name: revalytiq-redis
-    plan: starter
-    region: oregon
 
 databases:
   - name: revalytiq-postgres
