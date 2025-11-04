@@ -1,3 +1,5 @@
+renderYamlSchemaVersion: 1
+
 services:
   - type: redis
     name: revalytiq-redis
