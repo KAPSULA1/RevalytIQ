@@ -6,7 +6,8 @@ const replaceMock = jest.fn();
 const invalidateQueriesMock = jest.fn();
 const successToast = jest.fn();
 
-const useQueryMock = jest.fn((queryKey) => ({ data: undefined, isLoading: false, isError: false }));
+const useQueryMock: jest.Mock = jest.fn();
+useQueryMock.mockImplementation(() => ({ data: undefined, isLoading: false, isError: false }));
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: replaceMock }),

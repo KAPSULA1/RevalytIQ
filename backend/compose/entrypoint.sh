@@ -4,7 +4,7 @@ set -euo pipefail
 if [ -n "${DJANGO_SETTINGS_MODULE:-}" ]; then
   export DJANGO_SETTINGS_MODULE
 else
-  export DJANGO_SETTINGS_MODULE="revalyt.settings.base"
+  export DJANGO_SETTINGS_MODULE="revalyt.settings.prod"
 fi
 
 python manage.py migrate --noinput
