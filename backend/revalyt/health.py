@@ -50,11 +50,11 @@ def health(_request):
     redis_ok = _check_redis()
     celery_ok = _check_celery()
 
-    status_code = 200 if all([db_ok, redis_ok, celery_ok]) else 503
+    status_code = 200 if db_ok else 503
     payload = {
         "status": "ok" if status_code == 200 else "degraded",
         "database": db_ok,
-        "redis": redis_ok if redis_ok else "error",
-        "celery": celery_ok if celery_ok else "error",
+        "redis": redis_ok,
+        "celery": celery_ok,
     }
     return JsonResponse(payload, status=status_code)
