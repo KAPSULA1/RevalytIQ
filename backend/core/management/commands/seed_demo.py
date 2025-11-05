@@ -29,22 +29,47 @@ class Command(BaseCommand):
 
         User = get_user_model()
 
-        if User.objects.filter(username="demo").exists():
-            if options["fail_safe"]:
-                self.stdout.write("Demo user already exists; skipping seed.")
-                return
-            raise SystemExit("Demo seed already present. Use --fail-safe to ignore.")
+        demo_password = getattr(settings, "DEMO_USER_PASSWORD", "password123")
+        demo_email = getattr(settings, "DEMO_USER_EMAIL", "demo@revalytiq.com")
 
-        with transaction.atomic():
-            user = User.objects.create_user(
+        existing_user = User.objects.filter(username="demo").first()
+        if existing_user:
+            updated = False
+            if existing_user.email != demo_email:
+                existing_user.email = demo_email
+                updated = True
+            if existing_user.first_name != "Demo":
+                existing_user.first_name = "Demo"
+                updated = True
+            if existing_user.last_name != "User":
+                existing_user.last_name = "User"
+                updated = True
+            if not existing_user.check_password(demo_password):
+                existing_user.set_password(demo_password)
+                updated = True
+            if not existing_user.is_active:
+                existing_user.is_active = True
+                updated = True
+            if updated:
+                existing_user.save()
+                self.stdout.write("Refreshed demo user profile and password.")
+            else:
+                self.stdout.write("Demo user already up to date.")
+            demo_user = existing_user
+            if options["fail_safe"]:
+                self.stdout.write("Demo seed already present; skipping dataset (fail-safe).")
+                return
+        else:
+            demo_user = User.objects.create_user(
                 username="demo",
-                email="demo@revalytiq.com",
-                password="password123",
+                email=demo_email,
+                password=demo_password,
                 first_name="Demo",
                 last_name="User",
             )
-            self.stdout.write(f"Created demo user {user.username} / password123")
+            self.stdout.write(f"Created demo user {demo_user.username} / {demo_password}")
 
+        with transaction.atomic():
             customers = []
             for i in range(10):
                 customer, _ = Customer.objects.get_or_create(
