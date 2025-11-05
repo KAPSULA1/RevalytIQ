@@ -19,9 +19,11 @@ def _check_database() -> bool:
 
 
 def _check_redis() -> bool:
-    redis_url = getattr(settings, "REDIS_URL", None) or getattr(settings, "CELERY_BROKER_URL", None)
-    if not redis_url:
-        return False
+    redis_url = getattr(settings, "REDIS_URL", None) or getattr(
+        settings, "CELERY_BROKER_URL", None
+    )
+    if not redis_url or redis_url.startswith("memory://"):
+        return True  # Redis is intentionally disabled in demo mode.
     try:
         client = Redis.from_url(redis_url, socket_connect_timeout=1, socket_timeout=1)
         return bool(client.ping())
@@ -30,6 +32,8 @@ def _check_redis() -> bool:
 
 
 def _check_celery() -> bool:
+    if getattr(settings, "CELERY_TASK_ALWAYS_EAGER", False):
+        return True  # Demo mode executes tasks synchronously; no worker to check.
     try:
         inspection = celery_app.control.inspect(timeout=1.0)
         if not inspection:
@@ -50,7 +54,7 @@ def health(_request):
     payload = {
         "status": "ok" if status_code == 200 else "degraded",
         "database": db_ok,
-        "redis": redis_ok,
-        "celery": celery_ok,
+        "redis": redis_ok if redis_ok else "error",
+        "celery": celery_ok if celery_ok else "error",
     }
     return JsonResponse(payload, status=status_code)
