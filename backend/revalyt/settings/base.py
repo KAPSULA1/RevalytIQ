@@ -183,12 +183,17 @@ SPECTACULAR_SETTINGS = {
 # --------------------------------------------------------------
 cors_origins_raw = env("CORS_ALLOWED_ORIGINS", default="")
 default_frontend_origin = env("DEFAULT_FRONTEND_ORIGIN", default="http://localhost:3000")
+demo_frontend_origins = {
+    default_frontend_origin,
+    "https://revalyt-iq.vercel.app",
+    "https://revalytiq.vercel.app",
+}
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in cors_origins_raw.split(",")
     if origin.strip()
-] or ([default_frontend_origin] if DEBUG else [])
+] or ( [default_frontend_origin] if DEBUG else sorted(demo_frontend_origins) )
 CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", default=True)
 
 csrf_trusted_raw = env("CSRF_TRUSTED_ORIGINS", default="")
@@ -196,7 +201,7 @@ CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in csrf_trusted_raw.split(",")
     if origin.strip()
-] or ([default_frontend_origin] if DEBUG else [])
+] or ( [default_frontend_origin] if DEBUG else sorted(demo_frontend_origins) )
 
 # --------------------------------------------------------------
 # Static / Media
