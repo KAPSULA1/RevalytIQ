@@ -3,12 +3,15 @@ from __future__ import annotations
 from datetime import timedelta
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -57,6 +60,27 @@ def _clear_auth_cookies(response: Response) -> None:
             response.delete_cookie(cookie_name, **cookie_kwargs)
 
 
+class EmailOrUsernameTokenSerializer(TokenObtainPairSerializer):
+    """
+    Allow logging in with either the username or e-mail address.
+    """
+
+    def validate(self, attrs):
+        attrs = attrs.copy()
+        username_input = attrs.get(self.username_field)
+
+        if username_input and "@" in username_input:
+            User = get_user_model()
+            try:
+                user = User.objects.get(email__iexact=username_input)
+            except ObjectDoesNotExist:
+                pass
+            else:
+                attrs[self.username_field] = getattr(user, self.username_field)
+
+        return super().validate(attrs)
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class CookieTokenObtainPairView(TokenObtainPairView):
     """
@@ -64,6 +88,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
     """
 
     permission_classes = [permissions.AllowAny]
+    serializer_class = EmailOrUsernameTokenSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
