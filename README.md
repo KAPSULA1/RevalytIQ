@@ -6,7 +6,7 @@ RevalytIQ is a production-grade analytics platform delivering revenue insights v
 
 > 🆓 **Live Demo**  
 - Backend (Render): https://revalytiq-backend.onrender.com  
-- Frontend (Vercel): https://revalytiq.vercel.app  
+- Frontend (Vercel): https://revalyt-iq.vercel.app  
 - Demo credentials: `demo@revalytiq.com` / `password123`
 
 The live demo runs in **Demo Mode** on Render’s free tier: Celery tasks execute synchronously, Redis is stubbed with in-memory backends, and deterministic demo data is seeded on every deploy. Production deployments can re-enable Redis + worker tiers without code changes.
