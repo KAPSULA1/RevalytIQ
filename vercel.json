@@ -1,11 +1,4 @@
 {
-  "version": 2,
-  "framework": "nextjs",
-  "env": {
-    "NEXT_PUBLIC_API_URL": "/api",
-    "NEXT_PUBLIC_APP_NAME": "RevalytIQ",
-    "NEXT_PUBLIC_SENTRY_DSN": ""
-  },
   "rewrites": [
     {
       "source": "/api/:path*",
