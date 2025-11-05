@@ -188,12 +188,16 @@ demo_frontend_origins = {
     "https://revalyt-iq.vercel.app",
     "https://revalytiq.vercel.app",
 }
+demo_cors_regexes = [r"^https://[a-z0-9-]+\.vercel\.app$"]
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in cors_origins_raw.split(",")
     if origin.strip()
-] or ( [default_frontend_origin] if DEBUG else sorted(demo_frontend_origins) )
+] or ([default_frontend_origin] if DEBUG else sorted(demo_frontend_origins))
+CORS_ALLOWED_ORIGIN_REGEXES = env.list("CORS_ALLOWED_ORIGIN_REGEXES", default=[]) or (
+    [] if DEBUG else demo_cors_regexes
+)
 CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", default=True)
 
 csrf_trusted_raw = env("CSRF_TRUSTED_ORIGINS", default="")
@@ -201,7 +205,14 @@ CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in csrf_trusted_raw.split(",")
     if origin.strip()
-] or ( [default_frontend_origin] if DEBUG else sorted(demo_frontend_origins) )
+] or (
+    [default_frontend_origin]
+    if DEBUG
+    else sorted(
+        demo_frontend_origins
+        | {"https://*.vercel.app"}
+    )
+)
 
 # --------------------------------------------------------------
 # Static / Media
