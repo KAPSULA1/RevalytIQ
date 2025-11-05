@@ -1,5 +1,3 @@
-renderYamlSchemaVersion: 1
-
 services:
   - type: web
     name: revalytiq-backend
