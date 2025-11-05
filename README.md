@@ -4,6 +4,13 @@
 
 RevalytIQ is a production-grade analytics platform delivering revenue insights via a Django REST API and a modern Next.js dashboard. Authentication is powered by JWT (SimpleJWT), while background analytics leverage Celery and Redis, and WebSockets keep dashboards current in real time.
 
+> 🆓 **Live Demo**  
+- Backend (Render): https://revalytiq-backend.onrender.com  
+- Frontend (Vercel): https://revalytiq.vercel.app  
+- Demo credentials: `demo@revalytiq.com` / `password123`
+
+The live demo runs in **Demo Mode** on Render’s free tier: Celery tasks execute synchronously, Redis is stubbed with in-memory backends, and deterministic demo data is seeded on every deploy. Production deployments can re-enable Redis + worker tiers without code changes.
+
 ## 🧩 Tech Topics / Tags
 
 `django` `nextjs` `dashboard` `analytics` `celery` `redis` `jwt` `realtime` `websocket`
@@ -52,6 +59,9 @@ flowchart LR
   Observability --> State
 ```
 
+> **Demo mode note:** On Render free tier, the Celery/Redis components above are executed inline (synchronously) while the rest of the architecture remains unchanged. Production deployments can flip the feature flags back on to restore dedicated workers.
+```
+
 ## Features
 
 - Secure JWT authentication (SimpleJWT) with refresh tokens.
@@ -60,6 +70,7 @@ flowchart LR
 - Polished signup and login flows with REST back-end integration.
 - Configurable CORS/CSRF for Next.js + Django pairing.
 - Production-ready Docker Compose, CI/CD, and deployment manifests.
+- Demo mode runs on free Render + Vercel tiers with automatic data seeding, while production mode enables Redis/Celery workers for background analytics.
 
 ## Tech Stack
 
@@ -148,8 +159,8 @@ make up
 
 ## 🧪 Demo / Seed Data
 
-- Load curated analytics fixtures with `python manage.py loaddata demo.json` from the `backend` directory.
-- Populate randomized but realistic datasets via [`django-seed`](https://github.com/Brobin/django-seed) once the virtual environment is active.
+- In demo mode, the Render deployment runs `python manage.py seed_demo --fail-safe` on every boot, ensuring fresh analytics data and a demo login (`demo@revalytiq.com` / `password123`).
+- To reseed locally, run `python manage.py seed_demo --fail-safe` after migrations.
 
 ## 💓 Healthcheck
 
@@ -175,6 +186,40 @@ The `/health/` endpoint reports JSON status for the PostgreSQL database, Redis c
 | `JWT_ACCESS_LIFETIME` | Minutes | `5` |
 | `JWT_REFRESH_LIFETIME` | Days | `7` |
 | `TIME_ZONE` | Server timezone | `UTC` |
+| `ENABLE_DEMO_SEED` | Auto-seed demo data (demo mode) | `True` |
+| `CELERY_TASK_ALWAYS_EAGER` | Run Celery tasks inline | `True` |
+| `CELERY_BROKER_URL` | Demo broker override | `memory://` |
+| `CELERY_RESULT_BACKEND` | Demo result backend override | `cache+memory://` |
+
+### Local Demo (`demo.env`)
+
+Spin up a free-tier equivalent environment locally:
+
+```bash
+cat <<'EOF' > demo.env
+DJANGO_SETTINGS_MODULE=revalyt.settings.demo
+ENVIRONMENT=demo
+ENABLE_DEMO_SEED=True
+CELERY_TASK_ALWAYS_EAGER=True
+CELERY_BROKER_URL=memory://
+CELERY_RESULT_BACKEND=cache+memory://
+EOF
+
+cd backend
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate
+env $(cat ../demo.env | xargs) python manage.py seed_demo --fail-safe
+env $(cat ../demo.env | xargs) python manage.py runserver 0.0.0.0:8010
+```
+
+Frontend (Vercel dev):
+
+```bash
+cp frontend/.env.example frontend/.env.local
+echo "NEXT_PUBLIC_API_URL=http://127.0.0.1:8010" >> frontend/.env.local
+cd frontend && pnpm dev --port 3100
+```
 
 ### Frontend (`frontend/.env.local`)
 
