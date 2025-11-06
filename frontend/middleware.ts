@@ -6,10 +6,11 @@ const BACKEND_ORIGIN = "https://revalytiq-backend.onrender.com";
 
 export function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith(API_PREFIX)) {
-    const backendUrl = new URL(
-      request.nextUrl.pathname,
-      BACKEND_ORIGIN
-    );
+    const pathname = request.nextUrl.pathname.endsWith("/")
+      ? request.nextUrl.pathname
+      : `${request.nextUrl.pathname}/`;
+
+    const backendUrl = new URL(pathname, BACKEND_ORIGIN);
     backendUrl.search = request.nextUrl.search;
     return NextResponse.rewrite(backendUrl);
   }
