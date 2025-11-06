@@ -1,8 +1,16 @@
 import axios from "axios";
 
+const apiBaseUrl =
+  process.env.NEXT_PUBLIC_API_URL && process.env.NEXT_PUBLIC_API_URL.trim() !== ""
+    ? process.env.NEXT_PUBLIC_API_URL
+    : "/api";
+
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8010",
+  baseURL: apiBaseUrl,
   withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 let refreshPromise: Promise<void> | null = null;
