@@ -24,6 +24,8 @@ def _normalize_host(raw_value: Optional[str]) -> Optional[str]:
     if not raw_value:
         return None
     value = raw_value.strip()
+    if "," in value:
+        value = value.split(",", 1)[0]
     if not value:
         return None
     if "://" in value:
@@ -40,12 +42,15 @@ def _normalize_host(raw_value: Optional[str]) -> Optional[str]:
 
 
 def _effective_host(request: HttpRequest) -> Optional[str]:
-    for candidate in (
+    forwarded_host = request.META.get("HTTP_X_FORWARDED_HOST")
+    candidates = [
+        forwarded_host,
         request.get_host(),
         request.META.get("HTTP_HOST"),
         request.META.get("HTTP_ORIGIN"),
         request.META.get("HTTP_REFERER"),
-    ):
+    ]
+    for candidate in candidates:
         normalized = _normalize_host(candidate)
         if normalized:
             return normalized
