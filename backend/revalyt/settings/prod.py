@@ -24,3 +24,7 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", defa
 SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=True)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+# Base settings compute SIMPLE_JWT before this module forces DEBUG=False, so
+# explicitly re-apply the secure-cookie default here to ensure SameSite=None
+# cookies are marked Secure in production/demo profiles.
+SIMPLE_JWT["AUTH_COOKIE_SECURE"] = env.bool("JWT_COOKIE_SECURE", default=True)

@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Optional
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from publicsuffix2 import get_sld
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,19 +20,95 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 
-def _cookie_settings(expires: timedelta):
+def _normalize_host(raw_value: Optional[str]) -> Optional[str]:
+    if not raw_value:
+        return None
+    value = raw_value.strip()
+    if not value:
+        return None
+    if "://" in value:
+        parsed = urlparse(value)
+        host = parsed.hostname
+    else:
+        host = value
+    if not host:
+        return None
+    cleaned = host.split("/", 1)[0].split(":", 1)[0].strip().lower().strip(".")
+    if cleaned.startswith("[") and cleaned.endswith("]"):  # IPv6 literals.
+        cleaned = cleaned[1:-1]
+    return cleaned or None
+
+
+def _effective_host(request: HttpRequest) -> Optional[str]:
+    for candidate in (
+        request.get_host(),
+        request.META.get("HTTP_HOST"),
+        request.META.get("HTTP_ORIGIN"),
+        request.META.get("HTTP_REFERER"),
+    ):
+        normalized = _normalize_host(candidate)
+        if normalized:
+            return normalized
+    return None
+
+
+def _normalized_allowed_hosts() -> set[str]:
+    allowed = set()
+    for entry in settings.ALLOWED_HOSTS:
+        value = (entry or "").strip()
+        if not value or value == "*":
+            continue
+        allowed.add(value.lstrip(".").lower())
+    return allowed
+
+
+def _cookie_domain(request: HttpRequest) -> Optional[str]:
+    configured = settings.SIMPLE_JWT.get("AUTH_COOKIE_DOMAIN")
+    if configured:
+        return configured
+
+    host = _effective_host(request)
+    if not host:
+        return None
+
+    if "." not in host:
+        return None
+
+    if all(part.isdigit() for part in host.split(".")):
+        return None
+
+    registrable = get_sld(host)
+    if (
+        registrable
+        and registrable != host
+        and registrable in _normalized_allowed_hosts()
+    ):
+        return registrable
+
+    return host
+
+
+def _cookie_settings(expires: timedelta, request: Optional[HttpRequest] = None):
     cfg = settings.SIMPLE_JWT
+    domain = cfg.get("AUTH_COOKIE_DOMAIN")
+    if domain is None and request is not None:
+        domain = _cookie_domain(request)
     return {
         "max_age": int(expires.total_seconds()),
         "secure": cfg.get("AUTH_COOKIE_SECURE", not settings.DEBUG),
         "httponly": cfg.get("AUTH_COOKIE_HTTP_ONLY", True),
         "samesite": cfg.get("AUTH_COOKIE_SAMESITE", "None"),
-        "domain": cfg.get("AUTH_COOKIE_DOMAIN"),
+        "domain": domain,
         "path": cfg.get("AUTH_COOKIE_PATH", "/"),
     }
 
 
-def _set_auth_cookies(response: Response, access: str, refresh: str) -> None:
+def _set_auth_cookies(
+    response: Response,
+    request: HttpRequest,
+    access: str,
+    refresh: str,
+) -> None:
     cfg = settings.SIMPLE_JWT
     access_cookie = cfg.get("AUTH_COOKIE")
     refresh_cookie = cfg.get("AUTH_COOKIE_REFRESH")
@@ -36,23 +116,23 @@ def _set_auth_cookies(response: Response, access: str, refresh: str) -> None:
         response.set_cookie(
             access_cookie,
             access,
-            **_cookie_settings(settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"]),
+            **_cookie_settings(settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"], request),
         )
     if refresh_cookie and refresh:
         response.set_cookie(
             refresh_cookie,
             refresh,
-            **_cookie_settings(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"]),
+            **_cookie_settings(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"], request),
         )
 
 
-def _clear_auth_cookies(response: Response) -> None:
+def _clear_auth_cookies(response: Response, request: HttpRequest) -> None:
     cfg = settings.SIMPLE_JWT
     cookie_kwargs = {
         "secure": cfg.get("AUTH_COOKIE_SECURE", not settings.DEBUG),
         "httponly": cfg.get("AUTH_COOKIE_HTTP_ONLY", True),
         "samesite": cfg.get("AUTH_COOKIE_SAMESITE", "None"),
-        "domain": cfg.get("AUTH_COOKIE_DOMAIN"),
+        "domain": _cookie_domain(request),
         "path": cfg.get("AUTH_COOKIE_PATH", "/"),
     }
     for cookie_name in (cfg.get("AUTH_COOKIE"), cfg.get("AUTH_COOKIE_REFRESH")):
@@ -99,7 +179,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
 
         data = serializer.validated_data
         response = Response({"detail": "Login successful."}, status=status.HTTP_200_OK)
-        _set_auth_cookies(response, data.get("access"), data.get("refresh"))
+        _set_auth_cookies(response, request, data.get("access"), data.get("refresh"))
         return response
 
 
@@ -127,7 +207,7 @@ class CookieTokenRefreshView(TokenRefreshView):
 
         data = serializer.validated_data
         response = Response({"detail": "Token refreshed."}, status=status.HTTP_200_OK)
-        _set_auth_cookies(response, data.get("access"), data.get("refresh", refresh_token))
+        _set_auth_cookies(response, request, data.get("access"), data.get("refresh", refresh_token))
         return response
 
 
@@ -148,5 +228,5 @@ class CookieTokenLogoutView(APIView):
                 token.blacklist()
             except (TokenError, InvalidToken):
                 pass
-        _clear_auth_cookies(response)
+        _clear_auth_cookies(response, request)
         return response

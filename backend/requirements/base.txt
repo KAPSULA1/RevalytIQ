@@ -12,3 +12,4 @@ celery~=5.4
 redis~=5.0
 python-dateutil~=2.9
 whitenoise~=6.8
+publicsuffix2~=2.20191221
