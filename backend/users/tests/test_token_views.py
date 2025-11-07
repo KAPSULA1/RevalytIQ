@@ -23,26 +23,39 @@ def demo_user():
     ALLOWED_HOSTS=[
         "testserver",
         "revalyt-iq.vercel.app",
+        "revalytiq-backend.onrender.com",
         ".revalytiq.com",
         "localhost",
         "127.0.0.1",
     ]
 )
 @pytest.mark.parametrize(
-    ("host", "expected_domain"),
+    ("host", "forwarded_host", "expected_domain"),
     [
-        ("revalyt-iq.vercel.app", "revalyt-iq.vercel.app"),
-        ("app.revalytiq.com", "revalytiq.com"),
-        ("localhost", ""),
-        ("127.0.0.1", ""),
+        ("revalyt-iq.vercel.app", None, "revalyt-iq.vercel.app"),
+        (
+            "revalytiq-backend.onrender.com",
+            "revalyt-iq.vercel.app",
+            "revalyt-iq.vercel.app",
+        ),
+        ("app.revalytiq.com", None, "revalytiq.com"),
+        ("localhost", None, ""),
+        ("127.0.0.1", None, ""),
     ],
 )
-def test_cookie_domain_follows_request_host(client, demo_user, host, expected_domain):
+def test_cookie_domain_follows_request_host(
+    client,
+    demo_user,
+    host,
+    forwarded_host,
+    expected_domain,
+):
     response = client.post(
         TOKEN_URL,
         data=json.dumps({"username": "demo", "password": "password123"}),
         content_type="application/json",
         HTTP_HOST=host,
+        **({"HTTP_X_FORWARDED_HOST": forwarded_host} if forwarded_host else {}),
     )
     assert response.status_code == 200
     access_cookie = response.cookies["revalyt_access"]
