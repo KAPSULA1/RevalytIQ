@@ -8,7 +8,7 @@
 
 ## Reporting a Vulnerability
 
-Please report security issues privately to **security@example.com**. Provide detailed reproduction steps and any relevant logs. We aim to acknowledge reports within 48 hours and provide a remediation plan within 7 days.
+Please report security issues privately to **giorgikapanadze222@gmail.com**. Provide detailed reproduction steps and any relevant logs. We aim to acknowledge reports within 48 hours and provide a remediation plan within 7 days.
 
 ## Best Practices
 

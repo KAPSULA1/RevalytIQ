@@ -1,135 +1,122 @@
-# === Python / Django ===
+# ===============================================================
+# Python / Django
+# ===============================================================
+
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
 *.egg-info/
-.env
-.venv/
-env/
-venv/
 db.sqlite3
+test.sqlite3
+*.sqlite3
+*.log
+
+# Virtual environments
+.env
+.env.*
+.venv/
+venv/
+env/
+
+# Django specific
 media/
 staticfiles/
-*.log
 celerybeat-schedule
 *.pid
-
-# === Django Migrations Cache ===
 */migrations/__pycache__/
 */migrations/*.pyc
 
-# === Node / Next.js ===
+# Pytest / Coverage
+.pytest_cache/
+coverage/
+coverage.xml
+htmlcov/
+*.cover
+*.coverage
+.coverage.*
+
+# ===============================================================
+# Frontend / Next.js / Node.js
+# ===============================================================
+
 node_modules/
 .next/
-out/
 dist/
+out/
+.cache/
+.pnpm-store/
+pnpm-debug.log*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
-coverage/
-*.local
+*.lock
 
-# === Environment & Config ===
-*.env
-*.env.local
-.env.*
-!.env.example
+# Frontend envs
+frontend/.env
+frontend/.env.*
+frontend/.env.local
 
-# === IDE / Editor Files ===
-.vscode/
-.idea/
-*.swp
-.DS_Store
-*.sublime-workspace
-*.sublime-project
+# ===============================================================
+# Docker / Containers
+# ===============================================================
 
-# === Tests / Reports ===
-.pytest_cache/
-coverage.xml
-htmlcov/
-jest-cache/
-jest-test-results.json
-
-# === Docker ===
 *.pid
 *.tar
+*.sock
 docker-compose.override.yml
 
-# === OS Files ===
+# ===============================================================
+# IDE / Editors
+# ===============================================================
+
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+*.swn
+.DS_Store
 Thumbs.db
 ehthumbs.db
 Icon?
 Desktop.ini
-# .gitignore
 
-# Python
-__pycache__/
-*.py[cod]
-*.sqlite3
-*.log
-.env
-.venv/
-db.sqlite3
+# Sublime
+*.sublime-workspace
+*.sublime-project
 
-# Django
-staticfiles/
-media/
+# ===============================================================
+# Backup / Temp / Junk Files
+# ===============================================================
 
-# Node
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.next/
-out/
-dist/
-.cache/
-.pnpm-store/
-*.lock
-
-# Environment
-.env.local
-.env.development.local
-.env.production.local
-.env.test.local
-
-# IDEs / Editors
-.vscode/
-.idea/
-*.swp
-.DS_Store
-
-# Coverage / test
-coverage/
-pytest_cache/
-jest_cache/
-
-# Docker / Compose
-*.pid
-*.sock
-*.tar
-node_modules/
-
-# Environment
-.env
-frontend/.env.local
-backend/.env
-
-# Virtualenv
-backend/.venv/
-.env
-.env.local
-backend/.env
-frontend/.env
-frontend/.env.local
-# Claude AI local settings
-.claude/
-
-# Editor backup files
 *~
 *.save
 *.bak
 *.tmp
-*.swp
-*.swx
 *.orig
+*.swx
+*.temp
+
+# ===============================================================
+# Project-specific
+# ===============================================================
+
+# Backend envs
+backend/.env
+backend/.env.*
+backend/.venv/
+
+# Claude AI local files
+.claude/
+
+# Jest caches
+jest-cache/
+jest-test-results.json
+
+# Lock/Build artifacts that should NEVER be committed
+frontend/.next/
+frontend/dist/
+frontend/out/
+frontend/coverage/
+    
