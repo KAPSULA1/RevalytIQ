@@ -15,7 +15,7 @@ The live demo runs in **Demo Mode** on Render’s free tier: Celery tasks execut
 
 `django` `nextjs` `dashboard` `analytics` `celery` `redis` `jwt` `realtime` `websocket`
 
-[![CI](https://github.com/KAPSULA1/RevalytIQ/actions/workflows/ci.yml/badge.svg)](https://github.com/KAPSULA1/RevalytIQ/actions/workflows/ci.yml)
+[![CI](https://github.com/Giorgi-Kapanadze/RevalytIQ/actions/workflows/ci.yml/badge.svg)](https://github.com/Giorgi-Kapanadze/RevalytIQ/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/badge/coverage-70%25-brightgreen)](#testing)
 [![Deploy Backend](https://render.com/deploy)](#deployment)
 [![Deploy Frontend](https://vercel.com/button)](#deployment)
