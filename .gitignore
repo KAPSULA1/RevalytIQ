@@ -125,3 +125,11 @@ frontend/.env.local
 # Claude AI local settings
 .claude/
 
+# Editor backup files
+*~
+*.save
+*.bak
+*.tmp
+*.swp
+*.swx
+*.orig

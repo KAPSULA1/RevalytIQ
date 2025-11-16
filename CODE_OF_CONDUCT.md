@@ -23,7 +23,7 @@ Examples of unacceptable behaviour:
 
 ## Enforcement
 
-Report violations to **conduct@example.com**. Project maintainers will review and respond within a reasonable timeframe. All complaints will be kept confidential.
+Report violations to **giorgikapanadze222@gmail.com**. Project maintainers will review and respond within a reasonable timeframe. All complaints will be kept confidential.
 
 ## Enforcement Guidelines
 
